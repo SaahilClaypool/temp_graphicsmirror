@@ -163,12 +163,29 @@ function load_file(){
     reader.onload = (evt) => {
         file_contents = parse_file(evt.target.result)
         let params = file_contents.params
+        fix_aspect(params)
         var thisProj = ortho(params.left, params.right, params.bottom, params.top, -1, 1);
         var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
         gl.uniformMatrix4fv(projMatrix, false, flatten(thisProj));
         draw_polylist(file_contents.polys)
     }
+}
 
+function fix_aspect(params){
+    // set viewport to fit params
+    let canv = document.getElementById("webgl")
+    let width = params.right - params.left
+    let height = params.top - params.bottom
+    let imageAR = height / width
+    let canvasAR = canv.height / canv.width
+    if(imageAR > canvasAR){ // too tall
+        gl.viewport( 0, 0, canvas.height / imageAR, canvas.height );
+    }
+    else {
+        gl.viewport( 0, 0, canvas.width, canvas.width * imageAR);
+    }
+
+    // gl.viewport( 0, 0, 400, 400);
 }
 
 function splitline(input_str){
