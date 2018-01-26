@@ -178,7 +178,36 @@ function parse_file (input_str) {
 
     params = lines[i].split("  ").map(parseFloat)
     let left = params[0], top = params[1], right = params[2], bottom = params[3]
-    let polynum = parseInt(lines[++i])
+    i++
+    let polynum = parseInt(lines[i])
+    i++
+    console.log("polynum: ", polynum)
     // each poly is # vertices, and then the vertices
+    for(var pi = 0; pi < polynum; pi++) {
+        let points = parsePoly(lines, i)
+        i += points.length + 1
+        // draw poly
+    }
+    
+}
 
+
+// return a list of vec4 with the appropriate points
+function parsePoly(lines, start){
+    let points = []
+    let verts = parseInt(lines[start])
+    console.log("start", start, "numvert" , verts)
+    for (var i = start + 1; i < start + 1 + verts; i++){
+        let vals= lines[i]
+            .split("  ")
+            .slice(1)
+            .map((el, _) => {
+            return parseFloat(el)
+        });
+        points.push(vec4(vals[0], vals[1], 0, 1))
+    }
+
+    console.log(points)
+
+    return points
 }
