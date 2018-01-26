@@ -199,33 +199,66 @@ function parse_file (input_str) {
     // 3+ 
     lines = splitline(input_str);
     var i = 0; 
+    let has_params = true;
     while(true){
+        if(lines[i] == null){
+            has_params = false; 
+            i = 0
+            break;
+        }
+        if(lines[i].length == 0){
+            i++;
+            continue;
+        }
         if(lines[i][0] == '*'){
             i++;
             break; // found start
         }
         i++;
     }
-
-    params = lines[i].split("  ").map(parseFloat)
-    console.log("params", params)
-    let left = params[0], top = params[1], right = params[2], bottom = params[3]
+    if(lines[i].length == 0){
+        i++; 
+    }
+    var left, right, top, bottom; 
+    if(has_params){
+        params = lines[i].split(" ")
+            .filter((line, _) => line.length != 0)
+            .map(parseFloat)
+        console.log("params", params)
+        left = params[0], top = params[1], right = params[2], bottom = params[3];
+        i++
+    }
+    else {
+        left = 0; right= 640; bottom = 0; top = 480;
+        console.log("Using Default")
+        i = 0; 
+    }
     let param_struct = {
         left: left,
         right: right, 
         bottom: bottom, 
         top: top
     }
-    i++
+    if(lines[i].length == 0){
+        i++
+    }
+    console.log("param struct", param_struct)
     let polynum = parseInt(lines[i])
     i++
+    if(lines[i].length == 0){
+        i++
+    }
     // each poly is # vertices, and then the vertices
     polys = []
     for(var pi = 0; pi < polynum; pi++) {
-        let points = parse_poly(lines, i)
-        i += points.length + 1
+        let points_ = parse_poly(lines, i)
+        i = points_.line
+        console.log(lines[i])
+        if(lines[i].length == 0){
+            i++
+        }
         // draw poly
-        polys.push(points)
+        polys.push(points_.points)
     }
     return {polys: polys, params: param_struct}; 
 }
@@ -234,17 +267,27 @@ function parse_file (input_str) {
 // return a list of vec4 with the appropriate points
 function parse_poly(lines, start){
     let points = []
+    if(lines[start.length] == 0){
+        start++; 
+    }
     let verts = parseInt(lines[start])
-    for (var i = start + 1; i < start + 1 + verts; i++){
+    for (var i = start + 1;  points.length < verts; i++){
+        if(lines[i].length == 0){
+            start += 1 // because there was a blank line
+            continue; 
+        }
         let vals= lines[i]
-            .split("  ")
-            .slice(1)
+            .split(" ")
+            .filter((el, _) => {
+                return el.length != 0
+            })
             .map((el, _) => {
             return parseFloat(el)
         });
         points.push(vec4(vals[0], vals[1], 0, 1))
     }
-    return points
+    console.log("Points" , points)
+    return {points: points, line: i}
 }
 
 /*
