@@ -3,15 +3,17 @@
 
 <head>
 	<meta charset="utf-8" />
-	<title>WebGL Example File</title>
+	<title>Graphics HW 1</title>
 
 	<script id="vshader" type="x-shader/x-vertex">
 	attribute vec4 vPosition;
 	attribute vec4 vColor;
 	varying vec4 fColor;
+	uniform mat4 projectionMatrix;
 
 	void main() {
-		gl_Position = vPosition;	// Point position
+		gl_Position = projectionMatrix * vPosition;	// Point position
+		// gl_Position = vPosition;	// Point position
   		gl_PointSize = 10.0;		// Point size
 		fColor = vColor;			// Pass point color to fragment shader
   	}
@@ -31,7 +33,7 @@
 	<script src="lib/initShaders.js"></script>
 	<script src="lib/MV.js"></script>
 
-	<script src="example.js"></script>
+	<script src="load.js"></script>
 
 </head>
 

@@ -35,6 +35,10 @@ function main()
 	//canvas.width = 200;
 	//canvas.height = 200;
     gl.viewport( 0, 0, canvas.width, canvas.height );
+
+	var thisProj = ortho(-1, 1, -1, 1, -1, 1);
+	var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
+	gl.uniformMatrix4fv(projMatrix, false, flatten(thisProj));
     
 
 	
@@ -75,16 +79,6 @@ function main()
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     
     //Allocate storage and write data to the buffer
-    //Write the data specified by the second parameter into the buffer object
-    //bound to the first parameter
-    //We use flatten because the data must be a single array of ints, uints, or floats (float32 or float64)
-    //This is a typed array, and we can't use push() or pop() with it
-    //
-    //Last parameter specifies a hint about how the program is going to use the data
-    //stored in the buffer object. This hint helps WebGL optimize performance but will not stop your
-    //program from working if you get it wrong.
-    //STATIC_DRAW - buffer object data will be specified once and used many times to draw shapes
-    //DYNAMIC_DRAW - buffer object data will be specified repeatedly and used many times to draw shapes
     gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
     
     var vColor = gl.getAttribLocation(program,  "vColor");
@@ -107,28 +101,43 @@ function main()
      * Draw a Rectangle
      **********************************/
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, points.length); //RECTANGLE
-	
-	
-	
-    window.onkeypress = function(event)
-    {
-    	var key = String.fromCharCode(event.keyCode);
-    	switch(key)
-    	{
-    	case 'a':
-    		//canvas.width = 200;
-    		//gl.clear(gl.COLOR_BUFFER_BIT);
-    		//gl.drawArrays(gl.TRIANGLES, 0, points.length);
-    		//window.alert('Key pressed is ' + key);
-    		break;
-    	}
-    }
+}
 
-    window.onclick = function(event)
-    {
-    	//canvas.width = 200;
-    	//gl.clear(gl.COLOR_BUFFER_BIT);
-    }
+function draw_polylist(listpoints){
+    console.log("Clearing");
+    gl.clear(gl.COLOR_BUFFER_BIT); 
+
+    listpoints.forEach(poly => {
+        draw_poly(poly); 
+    });
+}
+
+function draw_poly(poly){
+
+    // poly is already a list of vec4
+    // bind poly to webgl buffer
+    var pBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(poly), gl.STATIC_DRAW);
+    
+    // activate position
+    var vPosition = gl.getAttribLocation(program,  "vPosition");
+    gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+
+    var colors = poly.map((_) => {
+        return vec4(0,0,0,1); 
+    });
+
+    var cBuffer = gl.createBuffer();			//Create the buffer object
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
+    var vColor = gl.getAttribLocation(program,  "vColor");
+    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vColor);
+
+    // draw 
+	gl.drawArrays(gl.LINE_STRIP, 0, poly.length);
 }
 
 function clear_canvas() {
@@ -152,7 +161,12 @@ function load_file(){
     var reader = new FileReader();
     reader.readAsText(f, "UTF-8");
     reader.onload = (evt) => {
-        parse_file(evt.target.result)
+        file_contents = parse_file(evt.target.result)
+        let params = file_contents.params
+        var thisProj = ortho(params.left, params.right, params.bottom, params.top, -1, 1);
+        var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
+        gl.uniformMatrix4fv(projMatrix, false, flatten(thisProj));
+        draw_polylist(file_contents.polys)
     }
 
 }
@@ -177,26 +191,33 @@ function parse_file (input_str) {
     }
 
     params = lines[i].split("  ").map(parseFloat)
+    console.log("params", params)
     let left = params[0], top = params[1], right = params[2], bottom = params[3]
+    let param_struct = {
+        left: left,
+        right: right, 
+        bottom: bottom, 
+        top: top
+    }
     i++
     let polynum = parseInt(lines[i])
     i++
-    console.log("polynum: ", polynum)
     // each poly is # vertices, and then the vertices
+    polys = []
     for(var pi = 0; pi < polynum; pi++) {
-        let points = parsePoly(lines, i)
+        let points = parse_poly(lines, i)
         i += points.length + 1
         // draw poly
+        polys.push(points)
     }
-    
+    return {polys: polys, params: param_struct}; 
 }
 
 
 // return a list of vec4 with the appropriate points
-function parsePoly(lines, start){
+function parse_poly(lines, start){
     let points = []
     let verts = parseInt(lines[start])
-    console.log("start", start, "numvert" , verts)
     for (var i = start + 1; i < start + 1 + verts; i++){
         let vals= lines[i]
             .split("  ")
@@ -206,8 +227,27 @@ function parsePoly(lines, start){
         });
         points.push(vec4(vals[0], vals[1], 0, 1))
     }
-
-    console.log(points)
-
     return points
 }
+
+/*
+    window.onkeypress = function(event)
+    {
+    	var key = String.fromCharCode(event.keyCode);
+    	switch(key)
+    	{
+    	case 'a':
+    		//canvas.width = 200;
+    		//gl.clear(gl.COLOR_BUFFER_BIT);
+    		//gl.drawArrays(gl.TRIANGLES, 0, points.length);
+    		//window.alert('Key pressed is ' + key);
+    		break;
+    	}
+    }
+
+    window.onclick = function(event)
+    {
+    	//canvas.width = 200;
+    	//gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+*/
