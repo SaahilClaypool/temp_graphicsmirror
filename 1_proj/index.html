@@ -39,13 +39,14 @@
 
 <body onload="main()">
 
-	<canvas id="webgl" width="700" height="400">
+	<canvas id="webgl" width="700" height="400" style="border-style: solid;">
 		Please use a browser that supports the "canvas" tag.
 	</canvas>
 	<br/>
+	<h1>MODE: <div style="display:inline" id="mode">FILE</div></h1>
+	<br/>
 	<input id="file" type="file"/>
-	<button type="button" onclick="load_file()">upload</button>
-	<button type="button" onclick="clear_canvas()">clear</button>
+	<button id="upload" type="button" onclick="load_file()">upload</button>
 </body>
 
 </html>
