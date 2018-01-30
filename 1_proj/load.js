@@ -1,16 +1,21 @@
 /*
  * Some comments quoted from WebGL Programming Guide by Matsuda and Lea, 1st
- * edition.
+ * edition. Started from some class sample code. 
  *
- * @author Joshua Cuneo
+ * @author Saahil Claypool
  */
 
+
+/////////////////////////////////////////// globals for ease of use
 var gl;
 var canvas;
 var mode = "file"
-// should be a 2d array of points
+var program; 
+// 2d array of points (vec4) to keep track of the current drawing
 var current_drawing = [[]]
+// current polygon number
 var current_polygon = 0
+// constants for the color
 var colors = {
     black: vec4(0,0,0,1),
     red: vec4(1,0,0,1),
@@ -24,6 +29,8 @@ var current_color = colors.black;
 var current_params = {}
 
 var b_key_state = false
+
+/////////////////////////////////////////// end globals
 
 function main() {
     // Retrieve <canvas> element
@@ -46,79 +53,17 @@ function main() {
     program = initShaders(gl, "vshader", "fshader");
     gl.useProgram(program);
 
-    //Set up the viewport x, y - specify the lower-left corner of the viewport
-    //rectangle (in pixels) In WebGL, x and y are specified in the <canvas>
-    //coordinate system width, height - specify the width and height of the
-    //viewport (in pixels) canvas is the window, and viewport is the viewing
-    //area within that window canvas.width = 200; canvas.height = 200;
     gl.viewport(0, 0, canvas.width, canvas.height);
 
     var thisProj = ortho(-1, 1, -1, 1, -1, 1);
     var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
     gl.uniformMatrix4fv(projMatrix, false, flatten(thisProj));
-
-
-
-    /**********************************
-     * Points, Lines, and Fill
-     **********************************/
-
-    //Define the positions of our points Note how points are in a range from 0
-    //to 1
-    var points = [];
-    points.push(vec4(-0.8, -0.5, 0.0, 1.0));
-    points.push(vec4(0.5, -0.5, 0.0, 1.0));
-    points.push(vec4(0.0, 0.5, 0.0, 1.0));		//RECTANGLE - comment out
-    //points.push(vec4(-0.5, 0.5, 0.0, 1.0));   //RECTANGLE - vertex order
-    //matters points.push(vec4(0.5, 0.5, 0.0, 1.0));    //RECTANGLE
-
-    var pBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
-
-    var vPosition = gl.getAttribLocation(program, "vPosition");
-    gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vPosition);
-
-    //Define the colors of our points
-    var colors = [];
-    colors.push(vec4(1.0, 0.0, 0.0, 1.0));
-    colors.push(vec4(0.0, 1.0, 0.0, 1.0));
-    colors.push(vec4(0.0, 0.0, 1.0, 1.0));
-    //colors.push(vec4(1.0, 0.0, 1.0, 1.0));    //RECTANGLE
-
-    var cBuffer = gl.createBuffer();			//Create the buffer object
-
-    //Bind the buffer object to a target The target tells WebGL what type of
-    //data the buffer object contains, allowing it to deal with the contents
-    //correctly gl.ARRAY_BUFFER - specifies that the buffer object contains
-    //vertex data
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-
-    //Allocate storage and write data to the buffer
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
-
-    var vColor = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor);
-
-    // Set clear color
-
-    // Clear <canvas> by clearning the color buffer
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    // Draw a point
-    gl.drawArrays(gl.POINTS, 0, points.length);
-    //gl.drawArrays(gl.LINES, 0, points.length); gl.drawArrays(gl.LINE_STRIP, 0,
-    //points.length); gl.drawArrays(gl.LINE_LOOP, 0, points.length);
-    //gl.drawArrays(gl.TRIANGLES, 0, points.length);
-
-    /**********************************
-     * Draw a Rectangle
-     **********************************/
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, points.length); //RECTANGLE
 }
 
+/**
+ * list of polygons (each polygon is a list of vec4)
+ * @param {vec4[]} listpoints 
+ */
 function draw_polylist(listpoints) {
     console.log("Clearing");
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -129,8 +74,8 @@ function draw_polylist(listpoints) {
 }
 
 /**
- * 
- * @param {list[vec4]} poly 
+ *  draw a single polygon
+ * @param {vec4[]} poly 
  * @param {vec4} color 
  */
 function draw_poly(poly, color) {
@@ -145,41 +90,39 @@ function draw_poly(poly, color) {
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
 
+    // get a list of the same size of the current color
     var colors = poly.map((_) => {
         return color;
     });
 
-    var cBuffer = gl.createBuffer();			//Create the buffer object
+    var cBuffer = gl.createBuffer(); //Create the buffer object
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
     var vColor = gl.getAttribLocation(program, "vColor");
     gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vColor);
 
-    // draw 
+    // draw single point of only one point is given
     if(poly.length == 1){
         gl.drawArrays(gl.POINTS, 0, poly.length);
     }
-    else {
+    else { // else draw line strip
         gl.drawArrays(gl.LINE_STRIP, 0, poly.length);
     }
 }
 
+/**
+ * clear everything on the canvas
+ */
 function clear_canvas() {
     console.log("Clear");
-    set_clear_color("white");
+    gl.clearColor(1,1,1,1);
     gl.clear(gl.COLOR_BUFFER_BIT);
 }
 
-function set_clear_color(color) {
-    if (color == "black") {
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    }
-    else {// white
-        gl.clearColor(1, 1, 1, 1.0);
-    }
-}
-
+/**
+ * load the file uploaded from the user and draw on the screen
+ */
 function load_file() {
     let f = document.getElementById("file").files[0];
     console.log(f);
@@ -196,19 +139,20 @@ function load_file() {
     }
 }
 
+// fix the scale based on the left right top and bottom of the image to fit on the canvas
 function fix_scale(params){
     var thisProj = ortho(params.left, params.right, params.bottom, params.top, -1, 1);
     var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
     gl.uniformMatrix4fv(projMatrix, false, flatten(thisProj));
 }
 
+// fix the aspect ratio if the screen is too wide or tall
 function fix_aspect(params) {
     // set viewport to fit params
-    let canv = document.getElementById("webgl")
     let width = params.right - params.left
     let height = params.top - params.bottom
     let imageAR = height / width
-    let canvasAR = canv.height / canv.width
+    let canvasAR = canvas.height / canvas.width
     if (imageAR > canvasAR) { // too tall
         gl.viewport(0, 0, canvas.height / imageAR, canvas.height);
     }
@@ -219,27 +163,40 @@ function fix_aspect(params) {
     // gl.viewport( 0, 0, 400, 400);
 }
 
+/**
+ * Draw whatever is in the current drawing variable
+ */
 function draw_current_drawing() {
     clear_canvas();
-    let canvas = document.getElementById("webgl"); 
     let params = {
         left: 0,
         right: canvas.width,
         top: 0, 
         bottom: canvas.height
     }
+    console.log("params: " + params.right + "y: " + params.bottom)
     current_params = params; 
+    // go back to original dimmensions
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    fix_aspect(params);
     fix_scale(params);
     draw_polylist(current_drawing)
 }
 
 
-// ------------------------------------------------------------ PARSING
-
+////////////////////////////////////////////////// Parsing
+/**
+ * Split file into each line 
+ * @param {string} input_str 
+ */
 function splitline(input_str) {
     return input_str.split(/\r?\n/);
 }
 
+/**
+ * Parse points from file
+ * @param {string} input_str file as a string 
+ */
 function parse_file(input_str) {
     // start at * 1: left, top, right, bottom of figure (ranges for points) 2:
     // number of polylines (length of data) 3+ 
@@ -310,7 +267,13 @@ function parse_file(input_str) {
 }
 
 
-// return a list of vec4 with the appropriate points
+/**
+ * parse an individual polygon. Returns the number of lines used to parse the polygon
+ * so the next polygon can be parsed from the given location
+ * @param {string[]} lines 
+ * @param {*} start 
+ * @return {points, line}
+ */
 function parse_poly(lines, start) {
     let points = []
     if (lines[start.length] == 0) {
@@ -336,6 +299,10 @@ function parse_poly(lines, start) {
     return { points: points, line: i }
 }
 
+/**
+ * change state based on the key pressed
+ * @param {any} event 
+ */
 function handle_keypress(event){
     switch (event.key){
         case "d":
@@ -373,12 +340,18 @@ function handle_keypress(event){
     }
 }
 
+/**
+ * redraw current drawing
+ */
 function redraw() {
     fix_aspect(current_params)
     fix_scale(current_params);
     draw_polylist(current_drawing)
 }
 
+/**
+ * Cycle colors
+ */
 function change_color() {
     if(current_color == colors.black){
         current_color = colors.red; 
@@ -394,10 +367,8 @@ function change_color() {
     }
 }
 
-// ------------------------------ input handling
-
 /**
- * 
+ * Add a point to the current drawing at the mouse coordinates, and then redraw
  * @param {MouseEvent} event 
  */
 function handle_click(e) {
@@ -423,7 +394,6 @@ function handle_click(e) {
         current_drawing.push([])
     }
 
-    console.log("b key ", b_key_state)
 
     current_drawing[current_polygon].push(vec4(x, y, 0, 1))
     console.log("e x ", event.clientX, event.clientY);
@@ -431,6 +401,10 @@ function handle_click(e) {
     
 }
 
+/**
+ * toggle state while b is held down
+ * @param {event} event 
+ */
 function handle_keydown(event) {
     switch(event.key) {
         case 'b':
@@ -441,6 +415,10 @@ function handle_keydown(event) {
 
 }
 
+/**
+ * toggle state while b is released
+ * @param {event} event 
+ */
 function handle_keyup(event) {
     switch(event.key) {
         case 'b':
@@ -448,25 +426,3 @@ function handle_keyup(event) {
         break;
     }
 }
-
-/*
-    window.onkeypress = function(event)
-    {
-        var key = String.fromCharCode(event.keyCode);
-        switch(key)
-        {
-        case 'a':
-            //canvas.width = 200;
-            //gl.clear(gl.COLOR_BUFFER_BIT);
-            //gl.drawArrays(gl.TRIANGLES, 0, points.length);
-            //window.alert('Key pressed is ' + key);
-            break;
-        }
-    }
-
-    window.onclick = function(event)
-    {
-        //canvas.width = 200;
-        //gl.clear(gl.COLOR_BUFFER_BIT);
-    }
-*/
