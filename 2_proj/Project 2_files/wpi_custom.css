@@ -1,0 +1,34 @@
+@charset "UTF-8";
+/* CSS Document */
+
+div#audio_upload_under::after {
+	content: "Uploading a video file? We recommend using WPI's Media Server at video.wpi.edu instead of storing the file in Canvas. Videos stored on the Media Server do not count against your course's filesize quota and can be easily embedded or linked to in all of your Canvas course sites. Please contact us at atc-ttl@wpi.edu be set up with Media Server access and instructions.";
+	color: blue;
+	float: left;
+}
+
+input#attachment_uploaded_data+div::before {
+		content: "Uploading a video file? We recommend using WPI's Media Server at video.wpi.edu instead of storing the file in Canvas. Videos stored on the Media Server do not count against your course's filesize quota and can be easily embedded or linked to in all of your Canvas course sites. Please contact us at atc-ttl@wpi.edu be set up with Media Server access and instructions.";
+	color: blue;
+	float: left;
+}
+
+.ic-DashboardCard__header_image .ic-DashboardCard__header_hero {
+background-color: transparent !important;
+}
+
+.discussion-topic.unread label.discussion-column::after {
+    content: '';
+    display: block;
+    background: #bc1a2b;
+    border-radius: 15px;
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    margin-left: 1px;
+    margin-top: 2px;
+}
+
+b.nav-badge {
+margin-left: 8px;
+}

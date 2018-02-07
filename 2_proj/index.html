@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<title>Graphics HW 2</title>
+
+	<script id="vshader" type="x-shader/x-vertex">
+	attribute vec4 vPosition;
+	attribute vec4 vColor;
+	varying vec4 fColor;
+	uniform mat4 projectionMatrix;
+
+	void main() {
+		gl_Position = projectionMatrix * vPosition;	// Point position
+		// gl_Position = vPosition;	// Point position
+  		gl_PointSize = 10.0;		// Point size
+		fColor = vColor;			// Pass point color to fragment shader
+  	}
+	</script>
+
+	<script id="fshader" type="x-shader/x-fragment">
+	precision mediump float;
+	varying vec4 fColor;
+
+	void main() 
+	{
+		gl_FragColor = fColor;	// Point color
+  	}
+	</script>
+
+	<script src="lib/webgl-utils.js"></script>
+	<script src="lib/initShaders.js"></script>
+	<script src="lib/MV.js"></script>
+
+	<script src="load.js"></script>
+
+</head>
+
+<body onload="main()">
+
+	<canvas id="webgl" width="700" height="400" style="border-style: solid;">
+		Please use a browser that supports the "canvas" tag.
+	</canvas>
+	<br/>
+	<input id="file" type="file"/>
+	<button id="upload" type="button" onclick="load_file()">upload</button>
+	<br/>
+		<script id="__bs_script__">//<![CDATA[
+			document.write("<script async src='http://HOST:3000/browser-sync/browser-sync-client.js?v=2.23.6'><\/script>".replace("HOST", location.hostname));
+		//]]></script>
+</html>
