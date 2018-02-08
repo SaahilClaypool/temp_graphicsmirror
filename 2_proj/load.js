@@ -12,7 +12,7 @@ var canvas;
 var mode = "file"
 var program; 
 // 2d array of points (vec4) to keep track of the current drawing
-var current_drawing = [[]]
+var current_drawing = {}
 // current polygon number
 var current_polygon = 0
 // constants for the color
@@ -60,6 +60,7 @@ function main() {
     var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
     gl.uniformMatrix4fv(projMatrix, false, flatten(thisProj));
 
+
     // TODO remove hard code cube
     var cube = `ply
 format ascii 1.0
@@ -92,19 +93,7 @@ end_header
 3 4 1 5
     `;
     parse_file(cube)
-}
 
-/**
- * list of polygons (each polygon is a list of vec4)
- * @param {vec4[]} listpoints 
- */
-function draw_polylist(listpoints) {
-    console.log("Clearing");
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    listpoints.forEach(poly => {
-        draw_poly(poly, current_color);
-    });
 }
 
 /**
@@ -159,6 +148,65 @@ function fix_aspect(params) {
 }
 
 
+//////////////////////////////////////// Drawing
+function drawCurrent() {
+    // clear_canvas();
+    let params = {
+        left: -1,
+        right: 1,
+        top: 1, 
+        bottom:-1 
+    }
+    console.log(params)
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    fix_aspect(params);
+    fix_scale(params);
+    console.log(current_drawing)
+
+    // draw each face
+    current_drawing.triangles.forEach(element => {
+        drawFace(element)
+    });
+}
+
+/**
+ * @argument poly is {list[points]}
+ */
+function drawFace(poly) {
+    console.log("Drawing: ")
+    console.log(poly)
+    // poly is already a list of vec4 bind poly to webgl buffer
+    var pBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(poly), gl.STATIC_DRAW);
+
+    // activate position
+    var vPosition = gl.getAttribLocation(program, "vPosition");
+    gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+
+    // get a list of the same size of the current color
+    var colors = poly.map((_) => {
+        return current_color;
+    });
+
+    var cBuffer = gl.createBuffer(); //Create the buffer object
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
+    var vColor = gl.getAttribLocation(program, "vColor");
+    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vColor);
+
+    // draw single point of only one point is given
+    if (poly.length == 1) {
+        gl.drawArrays(gl.POINTS, 0, poly.length);
+    }
+    else { // else draw line strip
+        gl.drawArrays(gl.TRIANGLES, 0, poly.length);
+    }
+}
+
+
 ////////////////////////////////////////////////// Parsing
 /**
  * Split file into each line 
@@ -179,23 +227,23 @@ function parse_file(input_str) {
     lines = splitline(input_str);
     var i = 0
     line = lines[i];
-    if (lines[i] != "ply"){
+    if (lines[i] != "ply") {
         console.log("Ply not the first line")
         return;
     }
-    i++; 
+    i++;
     // skip format ascii
-    i++; 
+    i++;
     // read # verts
     line = lines[i]
     let verts = parseInt(line.split(" ")[2]);
     console.log(verts)
-    i++; 
+    i++;
     // skip 3 lines
     i += 3;
     // read # of poly
     line = lines[i]
-    let faces  = parseInt(line.split(" ")[2])
+    let faces = parseInt(line.split(" ")[2])
     i++
     console.log(faces)
     // skip line
@@ -204,17 +252,36 @@ function parse_file(input_str) {
     i++;
     // parse vertex array
     var vertlist = []
-    for (var j = 0; j < verts; j++, i++){
+    for (var j = 0; j < verts; j++ , i++) {
         line = lines[i]
-        vertlist.push(line.split(' ').map(parseFloat).slice(0,3))
+        temp = line.split(' ').map(parseFloat).slice(0, 3)
+        vertlist.push(vec4(temp[0], temp[1], temp[2], 1))
     }
     console.log(vertlist)
     // parse vertex to poly map
     var facelist = []
-    for (var j = 0; j < faces; j++, i++) {
+    for (var j = 0; j < faces; j++ , i++) {
         line = lines[i]
         facelist.push(line.split(' ').map(parseFloat).slice(1))
     }
     console.log(facelist)
+
+    triangles = []
+    facelist.forEach((v, i ) => {
+        triangles.push([
+            vertlist[v[0]], vertlist[v[1]], vertlist[v[2]]
+        ])
+    })
+
+   console.log("triangles")
+   console.log(triangles)
+
+    current_drawing = {}
+    current_drawing.verts = vertlist;
+    current_drawing.faces = facelist;
+    current_drawing.triangles = triangles
+
+    drawCurrent()
+
 }
 

@@ -107,6 +107,8 @@ function draw_poly(poly, color) {
         gl.drawArrays(gl.POINTS, 0, poly.length);
     }
     else { // else draw line strip
+        console.log("Drawing: ")
+        console.log(poly)
         gl.drawArrays(gl.LINE_STRIP, 0, poly.length);
     }
 }
