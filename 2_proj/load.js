@@ -199,16 +199,22 @@ function parse_file(input_str) {
     i++
     console.log(faces)
     // skip line
-    i++
+    i++;
     // end header
-    i++
+    i++;
     // parse vertex array
-    // parse vertex to poly map
-
-
-
-    for (; i < lines.length; i++){
-        // console.log(lines[i]);
+    var vertlist = []
+    for (var j = 0; j < verts; j++, i++){
+        line = lines[i]
+        vertlist.push(line.split(' ').map(parseFloat).slice(0,3))
     }
+    console.log(vertlist)
+    // parse vertex to poly map
+    var facelist = []
+    for (var j = 0; j < faces; j++, i++) {
+        line = lines[i]
+        facelist.push(line.split(' ').map(parseFloat).slice(1))
+    }
+    console.log(facelist)
 }
 
