@@ -11,7 +11,7 @@ var gl;
 var canvas;
 var mode = "file"
 var program; 
-var fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
+var fovy = 90.0;  // Field-of-view in Y direction angle (in degrees)
 var aspect;       // Viewport aspect ratio
 var program;
 
@@ -65,9 +65,11 @@ function main() {
 
     gl.viewport(0, 0, canvas.width, canvas.height);
 
-    var thisProj = ortho(-1, 1, -1, 1, -1, 1);
-    var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
-    gl.uniformMatrix4fv(projMatrix, false, flatten(thisProj));
+    // var thisProj = ortho(-1, 1, -1, 1, -1, 1);
+    // var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
+    projection = gl.getUniformLocation(program, "projectionMatrix");
+    modelView = gl.getUniformLocation(program, "modelMatrix");
+    gl.uniformMatrix4fv(projection, false, flatten(projection));
 
 
     // TODO remove hard code cube
@@ -132,34 +134,34 @@ function load_file() {
     }
 }
 
-// fix the scale based on the left right top and bottom of the image to fit on the canvas
-function fix_scale(params){
-    var thisProj = ortho(params.left, params.right, params.bottom, params.top, -1, 1);
-    var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
-    gl.uniformMatrix4fv(projMatrix, false, flatten(thisProj));
-}
+// // fix the scale based on the left right top and bottom of the image to fit on the canvas
+// function fix_scale(params){
+//     var thisProj = ortho(params.left, params.right, params.bottom, params.top, -1, 1);
+//     var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
+//     gl.uniformMatrix4fv(projMatrix, false, flatten(thisProj));
+// }
 
-// fix the aspect ratio if the screen is too wide or tall
-function fix_aspect(params) {
-    // set viewport to fit params
-    let width = params.right - params.left
-    let height = params.top - params.bottom
-    let imageAR = height / width
-    let canvasAR = canvas.height / canvas.width
-    if (imageAR > canvasAR) { // too tall
-        gl.viewport(0, 0, canvas.height / imageAR, canvas.height);
-    }
-    else {
-        gl.viewport(0, 0, canvas.width, canvas.width * imageAR);
-    }
+// // fix the aspect ratio if the screen is too wide or tall
+// function fix_aspect(params) {
+//     // set viewport to fit params
+//     let width = params.right - params.left
+//     let height = params.top - params.bottom
+//     let imageAR = height / width
+//     let canvasAR = canvas.height / canvas.width
+//     if (imageAR > canvasAR) { // too tall
+//         gl.viewport(0, 0, canvas.height / imageAR, canvas.height);
+//     }
+//     else {
+//         gl.viewport(0, 0, canvas.width, canvas.width * imageAR);
+//     }
 
-    // gl.viewport( 0, 0, 400, 400);
-}
+//     // gl.viewport( 0, 0, 400, 400);
+// }
 
 
 //////////////////////////////////////// Drawing
 function drawCurrent() {
-    // clear_canvas();
+    clear_canvas();
     let params = {
         left: -1,
         right: 1,
@@ -175,14 +177,18 @@ function drawCurrent() {
     // render stuff
     // perspective
     pMatrix = perspective(fovy, aspect, .1, 10);
-    gl.uniformMatrix4fv(projection, )
+    gl.uniformMatrix4fv(projection, false, flatten(pMatrix)); 
 
+    // look at
+    eye = vec3(0, 2, 4);
+    mvMatrix = lookAt(eye, at, up)
 
-
-    console.log(current_drawing)
+    console.log("mvMatrix")
+    console.log(mvMatrix)
 
     // draw each face
     current_drawing.triangles.forEach(element => {
+        gl.uniformMatrix4fv(modelView, false, flatten(mvMatrix));
         drawFace(element)
     });
 }

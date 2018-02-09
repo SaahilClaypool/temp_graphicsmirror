@@ -80,6 +80,9 @@ function render()
     eye = vec3(0, 2, 4);
     mvMatrix = lookAt(eye, at , up);
 
+    console.log("mvMatrix")
+    console.log(mvMatrix)
+
     gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
     draw(redCube, vec4(1.0, 0.0, 0.0, 1.0));
 
