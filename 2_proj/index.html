@@ -7,12 +7,13 @@
 
 	<script id="vshader" type="x-shader/x-vertex">
 	attribute vec4 vPosition;
+	uniform mat4 projectionMatrix; 
+	uniform modelMatrix; 
 	attribute vec4 vColor;
 	varying vec4 fColor;
-	uniform mat4 projectionMatrix;
 
 	void main() {
-		gl_Position = projectionMatrix * vPosition;	// Point position
+		gl_Position = projectionMatrix * modelMatrix * vPosition;	// Point position
 		// gl_Position = vPosition;	// Point position
   		gl_PointSize = 10.0;		// Point size
 		fColor = vColor;			// Pass point color to fragment shader

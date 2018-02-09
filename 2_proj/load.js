@@ -11,6 +11,15 @@ var gl;
 var canvas;
 var mode = "file"
 var program; 
+var fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
+var aspect;       // Viewport aspect ratio
+var program;
+
+var mvMatrix, pMatrix;
+var modelView, projection;
+var eye;
+const at = vec3(0.0, 0.0, 0.0);
+const up = vec3(0.0, 1.0, 0.0);
 // 2d array of points (vec4) to keep track of the current drawing
 var current_drawing = {}
 // current polygon number
@@ -159,8 +168,17 @@ function drawCurrent() {
     }
     console.log(params)
     gl.viewport(0, 0, canvas.width, canvas.height);
-    fix_aspect(params);
-    fix_scale(params);
+    aspect = canvas.width / canvas.height; 
+    // fix_aspect(params);
+    // fix_scale(params);
+
+    // render stuff
+    // perspective
+    pMatrix = perspective(fovy, aspect, .1, 10);
+    gl.uniformMatrix4fv(projection, )
+
+
+
     console.log(current_drawing)
 
     // draw each face
