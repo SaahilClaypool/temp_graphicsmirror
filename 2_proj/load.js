@@ -18,10 +18,17 @@ var program;
 var mvMatrix, pMatrix;
 var modelView, projection;
 var eye;
-const at = vec3(0.0, 0.0, 0.0);
+at = vec3(0.0, 0.0, 0.0);
 const up = vec3(0.0, 1.0, 0.0);
 // 2d array of points (vec4) to keep track of the current drawing
-var current_drawing = {}
+var current_drawing = {
+    left: -1, 
+    right: 1, 
+    bottom: -1, 
+    top: 1,
+    near: -1,
+    far: 1
+}
 // current polygon number
 var current_polygon = 0
 // constants for the color
@@ -35,7 +42,7 @@ var colors = {
 
 var current_color = colors.black;
 
-var current_params = {}
+var params = {}
 
 var b_key_state = false
 
@@ -69,7 +76,7 @@ function main() {
     // var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
     projection = gl.getUniformLocation(program, "projectionMatrix");
     modelView = gl.getUniformLocation(program, "modelMatrix");
-    gl.uniformMatrix4fv(projection, false, flatten(projection));
+    // gl.uniformMatrix4fv(projection, false, flatten());
 
 
     // TODO remove hard code cube
@@ -142,33 +149,26 @@ function load_file() {
 // }
 
 // // fix the aspect ratio if the screen is too wide or tall
-// function fix_aspect(params) {
-//     // set viewport to fit params
-//     let width = params.right - params.left
-//     let height = params.top - params.bottom
-//     let imageAR = height / width
-//     let canvasAR = canvas.height / canvas.width
-//     if (imageAR > canvasAR) { // too tall
-//         gl.viewport(0, 0, canvas.height / imageAR, canvas.height);
-//     }
-//     else {
-//         gl.viewport(0, 0, canvas.width, canvas.width * imageAR);
-//     }
+function fix_aspect(params) {
+    // set viewport to fit params
+    let width = params.right - params.left
+    let height = params.top - params.bottom
+    let imageAR = height / width
+    let canvasAR = canvas.height / canvas.width
+    if (imageAR > canvasAR) { // too tall
+        gl.viewport(0, 0, canvas.height / imageAR, canvas.height);
+    }
+    else {
+        gl.viewport(0, 0, canvas.width, canvas.width * imageAR);
+    }
 
-//     // gl.viewport( 0, 0, 400, 400);
-// }
+    // gl.viewport( 0, 0, 400, 400);
+}
 
 
 //////////////////////////////////////// Drawing
 function drawCurrent() {
     clear_canvas();
-    let params = {
-        left: -1,
-        right: 1,
-        top: 1, 
-        bottom:-1 
-    }
-    console.log(params)
     gl.viewport(0, 0, canvas.width, canvas.height);
     aspect = canvas.width / canvas.height; 
     // fix_aspect(params);
@@ -176,19 +176,50 @@ function drawCurrent() {
 
     // render stuff
     // perspective
+    console.log(params)
     pMatrix = perspective(fovy, aspect, .1, 10);
+    // pMatrix = perspective(fovy, aspect, params.near , params.far );
+
+    
+    // var perspMatrix = perspective(fovy, aspect, .1, 10);
     gl.uniformMatrix4fv(projection, false, flatten(pMatrix)); 
 
     // look at
-    eye = vec3(0, 2, 4);
+    eye = vec3(0, 0 , params.near + -2);
+    at = vec3((params.left + params.right) / 2,
+               (params.top + params.bottom) / 2, 
+                (params.near + params.far) / 2);
+    console.log("At")
+    console.log(at)
+    // could also make sure to move out eye far enough that it can see whole shape.
+    // so, sin / cos --> fov to get inside
     mvMatrix = lookAt(eye, at, up)
+
+    var scale; 
+
+    let imageAsp = (params.top - params.bottom) / (params.right - params.left) ;
+    // if( imageAsp > aspect) { // image is too tall, scale by height
+    //     let scaler = 1 / (params.top - params.bottom);
+    //     scale = scalem(scaler, scaler, 1);
+    //     console.log("Y Scaler");
+    //     console.log(scaler);
+    // }
+    // else {
+    //     let scaler = 1 / (params.right - params.left);
+    //     console.log("X Scaler");
+    //     console.log(scaler)
+    //     scale = scalem(scaler, scaler, 1);
+    // }
+
+    console.log(params)
+    // mvMatrix = mult(scale, mvMatrix)
 
     console.log("mvMatrix")
     console.log(mvMatrix)
+    gl.uniformMatrix4fv(modelView, false, flatten(mvMatrix));
 
     // draw each face
     current_drawing.triangles.forEach(element => {
-        gl.uniformMatrix4fv(modelView, false, flatten(mvMatrix));
         drawFace(element)
     });
 }
@@ -197,8 +228,8 @@ function drawCurrent() {
  * @argument poly is {list[points]}
  */
 function drawFace(poly) {
-    console.log("Drawing: ")
-    console.log(poly)
+    // console.log("Drawing: ")
+    // console.log(poly)
     // poly is already a list of vec4 bind poly to webgl buffer
     var pBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
@@ -226,7 +257,7 @@ function drawFace(poly) {
         gl.drawArrays(gl.POINTS, 0, poly.length);
     }
     else { // else draw line strip
-        gl.drawArrays(gl.TRIANGLES, 0, poly.length);
+        gl.drawArrays(gl.LINE_LOOP, 0, poly.length);
     }
 }
 
@@ -247,7 +278,7 @@ function splitline(input_str) {
 function parse_file(input_str) {
     // start at * 1: left, top, right, bottom of figure (ranges for points) 2:
     // number of polylines (length of data) 3+ 
-    console.log("parsing : ")
+    // console.log("parsing : ")
     lines = splitline(input_str);
     var i = 0
     line = lines[i];
@@ -261,7 +292,7 @@ function parse_file(input_str) {
     // read # verts
     line = lines[i]
     let verts = parseInt(line.split(" ")[2]);
-    console.log(verts)
+    // console.log(verts)
     i++;
     // skip 3 lines
     i += 3;
@@ -269,26 +300,62 @@ function parse_file(input_str) {
     line = lines[i]
     let faces = parseInt(line.split(" ")[2])
     i++
-    console.log(faces)
+    // console.log(faces)
     // skip line
     i++;
     // end header
     i++;
     // parse vertex array
     var vertlist = []
+    min_x = 0;
+    min_y = 0;
+    min_z = 0;
+
+    max_x = 0;
+    max_y = 0;
+    max_z = 0;
+
     for (var j = 0; j < verts; j++ , i++) {
         line = lines[i]
         temp = line.split(' ').map(parseFloat).slice(0, 3)
         vertlist.push(vec4(temp[0], temp[1], temp[2], 1))
+        if(temp[0] > max_x){
+            max_x = temp[0];
+        }
+        if(temp[1] > max_y){
+            max_y = temp[1];
+        }
+        if(temp[2] > max_z){
+            max_z = temp[2];
+        }
+        if(temp[0] < min_x){
+            min_x = temp[0];
+        }
+        if(temp[1] < min_y){
+            min_y = temp[1];
+        }
+        if(temp[2] < min_z){
+            min_z = temp[2];
+        }
     }
-    console.log(vertlist)
+
+    params = {
+        left: min_x,
+        right: max_x, 
+        bottom: min_y, 
+        top: max_x,
+        near: min_z, 
+        far: max_z,
+    }
+
+    // console.log(vertlist)
     // parse vertex to poly map
     var facelist = []
     for (var j = 0; j < faces; j++ , i++) {
         line = lines[i]
         facelist.push(line.split(' ').map(parseFloat).slice(1))
     }
-    console.log(facelist)
+    // console.log(facelist)
 
     triangles = []
     facelist.forEach((v, i ) => {
@@ -297,8 +364,8 @@ function parse_file(input_str) {
         ])
     })
 
-   console.log("triangles")
-   console.log(triangles)
+//    console.log("triangles")
+//    console.log(triangles)
 
     current_drawing = {}
     current_drawing.verts = vertlist;
