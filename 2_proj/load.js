@@ -14,6 +14,8 @@ var program;
 var fovy = 90.0;  // Field-of-view in Y direction angle (in degrees)
 var aspect;       // Viewport aspect ratio
 var program;
+// do pulseFactor 
+var pulseFactor = 1; 
 
 var mvMatrix, pMatrix;
 var modelView, projection;
@@ -40,7 +42,7 @@ var colors = {
     white: vec4(1,1,1,1),
 }
 
-var current_color = colors.black;
+var current_color = colors.white;
 
 var params = {}
 
@@ -124,7 +126,7 @@ end_header
  */
 function clear_canvas() {
     console.log("Clear");
-    gl.clearColor(1,1,1,1);
+    gl.clearColor(0,0,0,1);
     gl.clear(gl.COLOR_BUFFER_BIT);
 }
 
@@ -142,42 +144,47 @@ function load_file() {
 }
 
 // // fix the scale based on the left right top and bottom of the image to fit on the canvas
-// function fix_scale(params){
-//     var thisProj = ortho(params.left, params.right, params.bottom, params.top, -1, 1);
-//     var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
-//     gl.uniformMatrix4fv(projMatrix, false, flatten(thisProj));
-// }
 
-// // fix the aspect ratio if the screen is too wide or tall
-function fix_aspect(params) {
-    // set viewport to fit params
-    let width = params.right - params.left
-    let height = params.top - params.bottom
-    let imageAR = height / width
-    let canvasAR = canvas.height / canvas.width
-    if (imageAR > canvasAR) { // too tall
-        gl.viewport(0, 0, canvas.height / imageAR, canvas.height);
-    }
-    else {
-        gl.viewport(0, 0, canvas.width, canvas.width * imageAR);
-    }
-
-    // gl.viewport( 0, 0, 400, 400);
+function pulse() {
+    // // draw each face
+    // current_drawing.triangles.forEach(element => {
+    //     // element is a list of three points
+    //     // so, just scale the 3 points in direction of their  normal
+    //     // for each face, scale each point by v + c*n where c is constant v is point and n is normal
+    //     let a = subtract(element[0], element[1])
+    //     let b = subtract(element[0], element[2])
+    //     var n = normalize( cross(a, b));       // perpendicular vector
+    //     let mixed = element.map((vertex, i) => {
+    //         return mix(vertex, n, pulseFactor);
+    //     })
+    //     drawFace(element)
+    // });
 }
 
+function calculateViewDistance() {
+    // so, sin (1/2 fov) * z diff = xmin / xmax
+    let rads = fovy / 2 * Math.PI / 180; 
+    let dX = (params.right - params.left) / 2; 
+    let zX = Math.sin(rads) * dX; 
+    let dY = (params.top - params.bottom) / 2; 
+    let zY = Math.sin(rads) * dY; 
+    // zdiff = x
+    console.log("DY" + dY)
+    console.log("DX" + dX)
+    console.log("zY" + zY)
+    console.log("zX" + zX)
+    return Math.max(zX, zY); 
+}
 
 //////////////////////////////////////// Drawing
 function drawCurrent() {
     clear_canvas();
     gl.viewport(0, 0, canvas.width, canvas.height);
     aspect = canvas.width / canvas.height; 
-    // fix_aspect(params);
-    // fix_scale(params);
 
-    // render stuff
-    // perspective
+    console.log("params")
     console.log(params)
-    pMatrix = perspective(fovy, aspect, .1, 10);
+    pMatrix = perspective(fovy, aspect, params.near , params.far);
     // pMatrix = perspective(fovy, aspect, params.near , params.far );
 
     
@@ -185,10 +192,16 @@ function drawCurrent() {
     gl.uniformMatrix4fv(projection, false, flatten(pMatrix)); 
 
     // look at
-    eye = vec3(0, 0 , params.near + -2);
-    at = vec3((params.left + params.right) / 2,
-               (params.top + params.bottom) / 2, 
-                (params.near + params.far) / 2);
+    let avgy = (params.top + params.bottom) / 2, 
+        avgx = (params.left + params.right) / 2 
+        avgz = (params.far + params.near) / 2;
+    let newZ = calculateViewDistance(); 
+    eye = vec3(avgx,avgy , params.near + newZ * 1.5);
+    console.log("eye")
+    console.log(eye)
+    at = vec3(avgx,
+               avgy, 
+                avgz);
     console.log("At")
     console.log(at)
     // could also make sure to move out eye far enough that it can see whole shape.
@@ -198,19 +211,6 @@ function drawCurrent() {
     var scale; 
 
     let imageAsp = (params.top - params.bottom) / (params.right - params.left) ;
-    // if( imageAsp > aspect) { // image is too tall, scale by height
-    //     let scaler = 1 / (params.top - params.bottom);
-    //     scale = scalem(scaler, scaler, 1);
-    //     console.log("Y Scaler");
-    //     console.log(scaler);
-    // }
-    // else {
-    //     let scaler = 1 / (params.right - params.left);
-    //     console.log("X Scaler");
-    //     console.log(scaler)
-    //     scale = scalem(scaler, scaler, 1);
-    // }
-
     console.log(params)
     // mvMatrix = mult(scale, mvMatrix)
 
@@ -343,9 +343,9 @@ function parse_file(input_str) {
         left: min_x,
         right: max_x, 
         bottom: min_y, 
-        top: max_x,
-        near: min_z, 
-        far: max_z,
+        top: max_y,
+        near: max_z,
+        far: min_z,
     }
 
     // console.log(vertlist)
