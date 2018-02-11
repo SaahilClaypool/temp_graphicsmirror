@@ -15,9 +15,9 @@ var fovy = 90.0;  // Field-of-view in Y direction angle (in degrees)
 var aspect;       // Viewport aspect ratio
 var program;
 // do pulseFactor 
-var pulseFactor = 0; 
-var pulseStages = 1000; 
-var pulse = true; 
+var pulseFactor = - Math.PI / 2; 
+var pulseStages = 100; 
+var pulse = false; 
 
 var mvMatrix, pMatrix;
 var modelView, projection;
@@ -149,7 +149,7 @@ function calculatePulse(triangle) {
     let b = subtract(triangle[0], triangle[2])
     var n = normalize(cross(a, b));       // perpendicular vector
 
-    n = scale((pulseFactor % pulseStages) / pulseStages / 10, n); 
+    n = scale((Math.sin(pulseFactor) + 1) / 5, n); 
     
 
     let pulseData = translate(n, 0, 0); 
@@ -162,10 +162,10 @@ function calculatePulse(triangle) {
 function calculateViewDistance() {
     // so, sin (1/2 fov) * z diff = xmin / xmax
     let rads = fovy / 2 * Math.PI / 180;
-    let dX = (params.right - params.left) / 2;
-    let zX = Math.sin(rads) * dX;
-    let dY = (params.top - params.bottom) / 2;
-    let zY = Math.sin(rads) * dY;
+    let dX = ((params.right - params.left) / 2) * 1.1; 
+    let zX = Math.tan(rads) * dX;
+    let dY = ((params.top - params.bottom) / 2) * 1.1 ;
+    let zY = Math.tan(rads) * dY;
     // zdiff = x
     return Math.max(zX, zY);
 }
@@ -188,7 +188,7 @@ function drawCurrent() {
         avgx = (params.left + params.right) / 2
     avgz = (params.far + params.near) / 2;
     let newZ = calculateViewDistance();
-    eye = vec3(avgx, avgy, params.near + newZ * 1.5);
+    eye = vec3(avgx, avgy, params.near + newZ);
     at = vec3(avgx,
         avgy,
         avgz);
@@ -207,14 +207,16 @@ function drawCurrent() {
 
 }
 
-function drawPostSetup() {
+async function drawPostSetup() {
     clear_canvas();
     current_drawing.triangles.forEach(element => {
         drawFace(element)
     });
     if(pulse) {
-        pulseFactor = (pulseFactor + 1) % (2 * pulseStages); 
-        requestAnimationFrame(drawPostSetup)
+        pulseFactor += .1
+        await sleep(700); 
+        drawPostSetup();
+        // requestAnimationFrame(drawPostSetup)
     }
 
 }
@@ -372,3 +374,7 @@ function parse_file(input_str) {
 
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+  
