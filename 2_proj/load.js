@@ -15,7 +15,9 @@ var fovy = 90.0;  // Field-of-view in Y direction angle (in degrees)
 var aspect;       // Viewport aspect ratio
 var program;
 // do pulseFactor 
-var pulseFactor = 1; 
+var pulseFactor = 0; 
+var pulseStages = 1000; 
+var pulse = true; 
 
 var mvMatrix, pMatrix;
 var modelView, projection;
@@ -125,7 +127,6 @@ end_header
  * clear everything on the canvas
  */
 function clear_canvas() {
-    console.log("Clear");
     gl.clearColor(0,0,0,1);
     gl.clear(gl.COLOR_BUFFER_BIT);
 }
@@ -135,7 +136,6 @@ function clear_canvas() {
  */
 function load_file() {
     let f = document.getElementById("file").files[0];
-    // console.log(f);
     var reader = new FileReader();
     reader.readAsText(f, "UTF-8");
     reader.onload = (evt) => {
@@ -143,93 +143,87 @@ function load_file() {
     }
 }
 
-// // fix the scale based on the left right top and bottom of the image to fit on the canvas
+function calculatePulse(triangle) {
+    // draw each face
+    let a = subtract(triangle[0], triangle[1])
+    let b = subtract(triangle[0], triangle[2])
+    var n = normalize(cross(a, b));       // perpendicular vector
 
-function pulse() {
-    // // draw each face
-    // current_drawing.triangles.forEach(element => {
-    //     // element is a list of three points
-    //     // so, just scale the 3 points in direction of their  normal
-    //     // for each face, scale each point by v + c*n where c is constant v is point and n is normal
-    //     let a = subtract(element[0], element[1])
-    //     let b = subtract(element[0], element[2])
-    //     var n = normalize( cross(a, b));       // perpendicular vector
-    //     let mixed = element.map((vertex, i) => {
-    //         return mix(vertex, n, pulseFactor);
-    //     })
-    //     drawFace(element)
-    // });
+    n = scale((pulseFactor % pulseStages) / pulseStages / 10, n); 
+    
+
+    let pulseData = translate(n, 0, 0); 
+
+    var pulseMatrix = gl.getUniformLocation(program, 'pulseMatrix');
+    gl.uniformMatrix4fv(pulseMatrix, false, flatten(pulseData)); 
+
 }
 
 function calculateViewDistance() {
     // so, sin (1/2 fov) * z diff = xmin / xmax
-    let rads = fovy / 2 * Math.PI / 180; 
-    let dX = (params.right - params.left) / 2; 
-    let zX = Math.sin(rads) * dX; 
-    let dY = (params.top - params.bottom) / 2; 
-    let zY = Math.sin(rads) * dY; 
+    let rads = fovy / 2 * Math.PI / 180;
+    let dX = (params.right - params.left) / 2;
+    let zX = Math.sin(rads) * dX;
+    let dY = (params.top - params.bottom) / 2;
+    let zY = Math.sin(rads) * dY;
     // zdiff = x
-    console.log("DY" + dY)
-    console.log("DX" + dX)
-    console.log("zY" + zY)
-    console.log("zX" + zX)
-    return Math.max(zX, zY); 
+    return Math.max(zX, zY);
 }
 
 //////////////////////////////////////// Drawing
 function drawCurrent() {
     clear_canvas();
     gl.viewport(0, 0, canvas.width, canvas.height);
-    aspect = canvas.width / canvas.height; 
+    aspect = canvas.width / canvas.height;
 
-    console.log("params")
-    console.log(params)
-    pMatrix = perspective(fovy, aspect, params.near , params.far);
+    pMatrix = perspective(fovy, aspect, params.near, params.far);
     // pMatrix = perspective(fovy, aspect, params.near , params.far );
 
-    
+
     // var perspMatrix = perspective(fovy, aspect, .1, 10);
-    gl.uniformMatrix4fv(projection, false, flatten(pMatrix)); 
+    gl.uniformMatrix4fv(projection, false, flatten(pMatrix));
 
     // look at
-    let avgy = (params.top + params.bottom) / 2, 
-        avgx = (params.left + params.right) / 2 
-        avgz = (params.far + params.near) / 2;
-    let newZ = calculateViewDistance(); 
-    eye = vec3(avgx,avgy , params.near + newZ * 1.5);
-    console.log("eye")
-    console.log(eye)
+    let avgy = (params.top + params.bottom) / 2,
+        avgx = (params.left + params.right) / 2
+    avgz = (params.far + params.near) / 2;
+    let newZ = calculateViewDistance();
+    eye = vec3(avgx, avgy, params.near + newZ * 1.5);
     at = vec3(avgx,
-               avgy, 
-                avgz);
-    console.log("At")
-    console.log(at)
+        avgy,
+        avgz);
     // could also make sure to move out eye far enough that it can see whole shape.
     // so, sin / cos --> fov to get inside
     mvMatrix = lookAt(eye, at, up)
 
-    var scale; 
+    var scale;
 
-    let imageAsp = (params.top - params.bottom) / (params.right - params.left) ;
-    console.log(params)
+    let imageAsp = (params.top - params.bottom) / (params.right - params.left);
     // mvMatrix = mult(scale, mvMatrix)
 
-    console.log("mvMatrix")
-    console.log(mvMatrix)
     gl.uniformMatrix4fv(modelView, false, flatten(mvMatrix));
 
-    // draw each face
+    drawPostSetup(); 
+
+}
+
+function drawPostSetup() {
+    clear_canvas();
     current_drawing.triangles.forEach(element => {
         drawFace(element)
     });
+    if(pulse) {
+        pulseFactor = (pulseFactor + 1) % (2 * pulseStages); 
+        requestAnimationFrame(drawPostSetup)
+    }
+
 }
 
 /**
  * @argument poly is {list[points]}
  */
 function drawFace(poly) {
-    // console.log("Drawing: ")
-    // console.log(poly)
+    calculatePulse(poly)
     // poly is already a list of vec4 bind poly to webgl buffer
     var pBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
@@ -245,12 +239,14 @@ function drawFace(poly) {
         return current_color;
     });
 
+    // color
     var cBuffer = gl.createBuffer(); //Create the buffer object
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
     var vColor = gl.getAttribLocation(program, "vColor");
     gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vColor);
+
 
     // draw single point of only one point is given
     if (poly.length == 1) {
@@ -319,30 +315,30 @@ function parse_file(input_str) {
         line = lines[i]
         temp = line.split(' ').map(parseFloat).slice(0, 3)
         vertlist.push(vec4(temp[0], temp[1], temp[2], 1))
-        if(temp[0] > max_x){
+        if (temp[0] > max_x) {
             max_x = temp[0];
         }
-        if(temp[1] > max_y){
+        if (temp[1] > max_y) {
             max_y = temp[1];
         }
-        if(temp[2] > max_z){
+        if (temp[2] > max_z) {
             max_z = temp[2];
         }
-        if(temp[0] < min_x){
+        if (temp[0] < min_x) {
             min_x = temp[0];
         }
-        if(temp[1] < min_y){
+        if (temp[1] < min_y) {
             min_y = temp[1];
         }
-        if(temp[2] < min_z){
+        if (temp[2] < min_z) {
             min_z = temp[2];
         }
     }
 
     params = {
         left: min_x,
-        right: max_x, 
-        bottom: min_y, 
+        right: max_x,
+        bottom: min_y,
         top: max_y,
         near: max_z,
         far: min_z,
@@ -358,14 +354,14 @@ function parse_file(input_str) {
     // console.log(facelist)
 
     triangles = []
-    facelist.forEach((v, i ) => {
+    facelist.forEach((v, i) => {
         triangles.push([
             vertlist[v[0]], vertlist[v[1]], vertlist[v[2]]
         ])
     })
 
-//    console.log("triangles")
-//    console.log(triangles)
+    //    console.log("triangles")
+    //    console.log(triangles)
 
     current_drawing = {}
     current_drawing.verts = vertlist;

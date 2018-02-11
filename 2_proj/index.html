@@ -11,9 +11,10 @@
 	uniform mat4 modelMatrix; 
 	attribute vec4 vColor;
 	varying vec4 fColor;
+	uniform mat4 pulseMatrix; 
 
 	void main() {
-		gl_Position = projectionMatrix * modelMatrix * vPosition;	// Point position
+		gl_Position = projectionMatrix *  modelMatrix * pulseMatrix * vPosition;	// Point position
 		// gl_Position = vPosition;	// Point position
   		gl_PointSize = 10.0;		// Point size
 		fColor = vColor;			// Pass point color to fragment shader
