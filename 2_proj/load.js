@@ -24,6 +24,15 @@ var modelView, projection;
 var eye;
 at = vec3(0.0, 0.0, 0.0);
 const up = vec3(0.0, 1.0, 0.0);
+
+
+// state stuff
+var state = {
+    trans : [0, 0, 0], 
+    rotate: [0, 0, 0]
+}
+
+
 // 2d array of points (vec4) to keep track of the current drawing
 var current_drawing = {
     left: -1, 
@@ -53,16 +62,13 @@ var b_key_state = false
 /////////////////////////////////////////// end globals
 
 function main() {
+    document.onkeypress = handle_keypress
     // Retrieve <canvas> element
     console.log("hello world");
     canvas = document.getElementById('webgl');
 
     // Get the rendering context for WebGL
     gl = WebGLUtils.setupWebGL(canvas);
-    // canvas.onclick = handle_click
-    // document.onkeydown = handle_keydown
-    // document.onkeyup = handle_keyup
-    // document.onkeypress = handle_keypress
 
     //Check that the return value is not null.
     if (!gl) {
@@ -118,6 +124,41 @@ end_header
 
 }
 
+function handle_keypress(event) {
+    console.log("key press"); 
+    let diff = .1
+    switch (event.key){
+        case "x":
+        state.trans[0] += diff; 
+        break; 
+        case "c":
+        state.trans[0] -= diff; 
+        break;
+        case "u":
+        state.trans[1] -= diff; 
+        break;
+        case "y":
+        state.trans[1] += diff; 
+        break;
+        case "z":
+        state.trans[2] += diff; 
+        break;
+        case "a":
+        state.trans[2] -= diff; 
+        break;
+
+        case "r":
+        // rotate
+        state.rotate[0] += 10 * diff;  // check direction
+        break; 
+        case "b":
+        pulse = !pulse; 
+        break;
+    }
+    drawCurrent();
+}
+
+
 /**
  *  draw a single polygon
  * @param {vec4[]} poly 
@@ -135,6 +176,12 @@ function clear_canvas() {
  * load the file uploaded from the user and draw on the screen
  */
 function load_file() {
+    // reset state
+    state = {
+        trans: [0, 0, 0],
+        rotate: [0, 0, 0]
+    }
+
     let f = document.getElementById("file").files[0];
     var reader = new FileReader();
     reader.readAsText(f, "UTF-8");
@@ -194,7 +241,12 @@ function drawCurrent() {
         avgz);
     // could also make sure to move out eye far enough that it can see whole shape.
     // so, sin / cos --> fov to get inside
-    mvMatrix = lookAt(eye, at, up)
+    let cameraMat = lookAt(eye, at, up)
+    let rotateMat = rotate(state.rotate[0], [1, 0, 0]);
+    let transMat = translate(state.trans[0], state.trans[1], state.trans[2]); 
+
+    mvMatrix = mult(transMat, rotateMat)
+    mvMatrix = mult(cameraMat, mvMatrix)
 
     var scale;
 
