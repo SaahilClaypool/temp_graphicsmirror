@@ -81,6 +81,9 @@ function main() {
     gl.useProgram(program);
 
     gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.enable(gl.CULL_FACE);
+    gl.cullFace(gl.BACK);
+    gl.enable(gl.DEPTH_TEST);
 
     // var thisProj = ortho(-1, 1, -1, 1, -1, 1);
     // var projMatrix = gl.getUniformLocation(program, 'projectionMatrix');
