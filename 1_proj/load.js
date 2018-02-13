@@ -5,7 +5,6 @@
  * @author Saahil Claypool
  */
 
-
 /////////////////////////////////////////// globals for ease of use
 var gl;
 var canvas;

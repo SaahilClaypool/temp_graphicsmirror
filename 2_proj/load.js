@@ -19,6 +19,8 @@ var pulseFactor = - Math.PI / 2;
 var pulseStages = 100; 
 var pulse = false; 
 
+var change = true; 
+
 var mvMatrix, pMatrix;
 var modelView, projection;
 var eye;
@@ -55,7 +57,12 @@ var colors = {
 
 var current_color = colors.white;
 
-var params = {}
+var params = {
+   left : -.5,
+   right : .5,
+   top : .5,
+   bottom : -.5,
+}
 
 var b_key_state = false
 
@@ -125,10 +132,12 @@ end_header
     `;
     parse_file(cube)
 
+    tick(); 
 }
 
 function handle_keypress(event) {
     console.log("key press"); 
+    change = true; 
     let diff = .1
     switch (event.key){
         case "x":
@@ -156,9 +165,23 @@ function handle_keypress(event) {
         break; 
         case "b":
         pulse = !pulse; 
+        if(!pulse) {
+            pulseFactor = - Math.PI / 2; 
+        }
         break;
     }
-    drawCurrent();
+    setupCurrent();
+}
+
+async function tick() {
+    while(true){
+        if(change){
+            console.log("animation"); 
+            requestAnimationFrame(drawPostSetup); 
+            change = false; 
+        }
+        await sleep(50); 
+    }
 }
 
 
@@ -179,6 +202,9 @@ function clear_canvas() {
  * load the file uploaded from the user and draw on the screen
  */
 function load_file() {
+    change = true; 
+    pulseFactor = - Math.PI / 2;
+    pulse = false; 
     // reset state
     state = {
         trans: [0, 0, 0],
@@ -212,21 +238,20 @@ function calculatePulse(triangle) {
 function calculateViewDistance() {
     // so, sin (1/2 fov) * z diff = xmin / xmax
     let rads = fovy / 2 * Math.PI / 180;
-    let dX = ((params.right - params.left) / 2) * 1.1; 
+    let dX = ((params.right - params.left) / 2) * 1.4; 
     let zX = Math.tan(rads) * dX;
-    let dY = ((params.top - params.bottom) / 2) * 1.1 ;
+    let dY = ((params.top - params.bottom) / 2) * 1.4 ;
     let zY = Math.tan(rads) * dY;
     // zdiff = x
     return Math.max(zX, zY);
 }
 
 //////////////////////////////////////// Drawing
-function drawCurrent() {
-    clear_canvas();
+function setupCurrent() {
     gl.viewport(0, 0, canvas.width, canvas.height);
     aspect = canvas.width / canvas.height;
 
-    pMatrix = perspective(fovy, aspect, params.near, params.far);
+    pMatrix = perspective(fovy, aspect, params.near - .4, params.far);
     // pMatrix = perspective(fovy, aspect, params.near , params.far );
 
 
@@ -238,7 +263,7 @@ function drawCurrent() {
         avgx = (params.left + params.right) / 2
     avgz = (params.far + params.near) / 2;
     let newZ = calculateViewDistance();
-    eye = vec3(avgx, avgy, params.near + newZ);
+    eye = vec3(avgx, avgy, params.near + newZ );
     at = vec3(avgx,
         avgy,
         avgz);
@@ -257,9 +282,6 @@ function drawCurrent() {
     // mvMatrix = mult(scale, mvMatrix)
 
     gl.uniformMatrix4fv(modelView, false, flatten(mvMatrix));
-
-    drawPostSetup(); 
-
 }
 
 async function drawPostSetup() {
@@ -269,8 +291,9 @@ async function drawPostSetup() {
     });
     if(pulse) {
         pulseFactor += .1
-        await sleep(700); 
-        drawPostSetup();
+        change = true; 
+        // await sleep(700); 
+        // drawPostSetup();
         // requestAnimationFrame(drawPostSetup)
     }
 
@@ -425,7 +448,7 @@ function parse_file(input_str) {
     current_drawing.faces = facelist;
     current_drawing.triangles = triangles
 
-    drawCurrent()
+    setupCurrent()
 
 }
 
