@@ -262,7 +262,8 @@ function setupCurrent() {
         avgx = (params.left + params.right) / 2
     avgz = (params.far + params.near) / 2;
     let newZ = calculateViewDistance();
-    eye = vec3(0, 0, params.near + newZ );
+    // eye = vec3(avgx, avgy, params.near + newZ);
+    eye = vec3(0, 0, params.near + newZ);
     at = vec3(0,
         0,
         avgz);
