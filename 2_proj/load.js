@@ -260,7 +260,7 @@ function setupCurrent() {
     // look at
     let avgy = (params.top + params.bottom) / 2,
         avgx = (params.left + params.right) / 2
-    avgz = (params.far + params.near) / 2;
+        avgz = (params.far + params.near) / 2;
     let newZ = calculateViewDistance();
     // eye = vec3(avgx, avgy, params.near + newZ);
     eye = vec3(0, 0, params.near + newZ);
@@ -423,6 +423,24 @@ function parse_file(input_str) {
         near: max_z,
         far: min_z,
     }
+
+    let avgy = (params.top + params.bottom) / 2,
+        avgx = (params.left + params.right) / 2
+        avgz = (params.far + params.near) / 2;
+
+    vertlist = vertlist.map((val, i) => {
+        return vec4(val[0] - avgx, val[1] - avgy, val[2] - avgz, val[3]); 
+    });
+
+    params = {
+        left: min_x - avgx,
+        right: max_x - avgx,
+        bottom: min_y - avgy,
+        top: max_y - avgy,
+        near: max_z - avgz,
+        far: min_z - avgz,
+    }
+
 
     // console.log(vertlist)
     // parse vertex to poly map
