@@ -238,15 +238,16 @@ function drawCurrent() {
         avgx = (params.left + params.right) / 2
     avgz = (params.far + params.near) / 2;
     let newZ = calculateViewDistance();
-    eye = vec3(avgx, avgy, params.near + newZ);
-    at = vec3(avgx,
-        avgy,
+    // eye = vec3(avgx, avgy, params.near + newZ);
+    eye = vec3(0, 0, params.near + newZ);
+    at = vec3(0,
+        0,
         avgz);
     // could also make sure to move out eye far enough that it can see whole shape.
     // so, sin / cos --> fov to get inside
     let cameraMat = lookAt(eye, at, up)
     let rotateMat = rotate(state.rotate[0], [1, 0, 0]);
-    let transMat = translate(state.trans[0], state.trans[1], state.trans[2]); 
+    let transMat = translate(state.trans[0] - avgx, state.trans[1] - avgy, state.trans[2]); 
 
     mvMatrix = mult(transMat, rotateMat)
     mvMatrix = mult(cameraMat, mvMatrix)
