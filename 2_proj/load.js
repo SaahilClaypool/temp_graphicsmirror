@@ -136,7 +136,6 @@ end_header
 }
 
 function handle_keypress(event) {
-    console.log("key press"); 
     change = true; 
     let diff = .1
     switch (event.key){
@@ -170,13 +169,13 @@ function handle_keypress(event) {
         }
         break;
     }
+    change = true; 
     setupCurrent();
 }
 
 async function tick() {
     while(true){
         if(change){
-            console.log("animation"); 
             requestAnimationFrame(drawPostSetup); 
             change = false; 
         }
@@ -251,7 +250,7 @@ function setupCurrent() {
     gl.viewport(0, 0, canvas.width, canvas.height);
     aspect = canvas.width / canvas.height;
 
-    pMatrix = perspective(fovy, aspect, params.near - .4, params.far);
+    pMatrix = perspective(fovy, aspect, params.near, params.far);
     // pMatrix = perspective(fovy, aspect, params.near , params.far );
 
 
@@ -263,15 +262,15 @@ function setupCurrent() {
         avgx = (params.left + params.right) / 2
     avgz = (params.far + params.near) / 2;
     let newZ = calculateViewDistance();
-    eye = vec3(avgx, avgy, params.near + newZ );
-    at = vec3(avgx,
-        avgy,
+    eye = vec3(0, 0, params.near + newZ );
+    at = vec3(0,
+        0,
         avgz);
     // could also make sure to move out eye far enough that it can see whole shape.
     // so, sin / cos --> fov to get inside
     let cameraMat = lookAt(eye, at, up)
     let rotateMat = rotate(state.rotate[0], [1, 0, 0]);
-    let transMat = translate(state.trans[0], state.trans[1], state.trans[2]); 
+    let transMat = translate(state.trans[0] - avgx, state.trans[1] - avgy, state.trans[2]); 
 
     mvMatrix = mult(transMat, rotateMat)
     mvMatrix = mult(cameraMat, mvMatrix)
