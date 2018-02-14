@@ -225,7 +225,7 @@ function calculatePulse(triangle) {
     let b = subtract(triangle[0], triangle[2])
     var n = normalize(cross(a, b));       // perpendicular vector
 
-    n = scale((Math.sin(pulseFactor) + 1) / 5, n); 
+    n = scale((Math.sin(pulseFactor) + 1) * 1/5 * (params.right - params.left), n); 
     
 
     let pulseData = translate(n, 0, 0); 
@@ -355,7 +355,6 @@ function splitline(input_str) {
 function parse_file(input_str) {
     // start at * 1: left, top, right, bottom of figure (ranges for points) 2:
     // number of polylines (length of data) 3+ 
-    // console.log("parsing : ")
     lines = splitline(input_str);
     var i = 0
     line = lines[i];
@@ -369,7 +368,6 @@ function parse_file(input_str) {
     // read # verts
     line = lines[i]
     let verts = parseInt(line.split(" ")[2]);
-    // console.log(verts)
     i++;
     // skip 3 lines
     i += 3;
@@ -377,7 +375,6 @@ function parse_file(input_str) {
     line = lines[i]
     let faces = parseInt(line.split(" ")[2])
     i++
-    // console.log(faces)
     // skip line
     i++;
     // end header
@@ -443,14 +440,12 @@ function parse_file(input_str) {
     }
 
 
-    // console.log(vertlist)
     // parse vertex to poly map
     var facelist = []
     for (var j = 0; j < faces; j++ , i++) {
         line = lines[i]
         facelist.push(line.split(' ').map(parseFloat).slice(1))
     }
-    // console.log(facelist)
 
     triangles = []
     facelist.forEach((v, i) => {
@@ -459,8 +454,6 @@ function parse_file(input_str) {
         ])
     })
 
-    //    console.log("triangles")
-    //    console.log(triangles)
 
     current_drawing = {}
     current_drawing.verts = vertlist;
