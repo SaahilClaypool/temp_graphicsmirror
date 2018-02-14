@@ -132,6 +132,7 @@ end_header
     `;
     parse_file(cube)
 
+    clear_canvas()
     tick(); 
 }
 
@@ -179,7 +180,7 @@ async function tick() {
             requestAnimationFrame(drawPostSetup); 
             change = false; 
         }
-        await sleep(50); 
+        await sleep(80); 
     }
 }
 
