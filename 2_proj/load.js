@@ -1,7 +1,8 @@
 /*
  * Some comments quoted from WebGL Programming Guide by Matsuda and Lea, 1st
  * edition. Started from some class sample code. 
- *
+ * This implements only the required features
+ * 
  * @author Saahil Claypool
  */
 
@@ -31,7 +32,16 @@ const up = vec3(0.0, 1.0, 0.0);
 // state stuff
 var state = {
     trans : [0, 0, 0], 
-    rotate: [0, 0, 0]
+    rotate: [0, 0, 0],
+    // keyboard state here
+    x: false,
+    c: false, 
+    u: false, 
+    y: false, 
+    z: false, 
+    a: false, 
+    r: false,
+    b: false
 }
 
 
@@ -55,8 +65,10 @@ var colors = {
     white: vec4(1,1,1,1),
 }
 
+// color to draw with
 var current_color = colors.white;
 
+// figure dimmensions
 var params = {
    left : -.5,
    right : .5,
@@ -99,7 +111,7 @@ function main() {
     // gl.uniformMatrix4fv(projection, false, flatten());
 
 
-    // TODO remove hard code cube
+    // Inital state is the cube 
     var cube = `ply
 format ascii 1.0
 element vertex 8
@@ -130,53 +142,109 @@ end_header
 3 4 0 1
 3 4 1 5
     `;
+    // parse the cube as a file
     parse_file(cube)
 
     clear_canvas()
+    // start tick loop
     tick(); 
 }
 
+
+// set state of program based on keyboard event
 function handle_keypress(event) {
     change = true; 
-    let diff = .1
-    switch (event.key){
+    switch (event.key){ 
         case "x":
-        state.trans[0] += diff; 
+        state.x = !state.x;
+        if(state.x){ // toggle move right
+            state.c = false;
+        }
         break; 
         case "c":
-        state.trans[0] -= diff; 
+        state.c = !state.c;
+        if(state.c){ // toggle move
+            state.x = false;
+        }
         break;
         case "u":
-        state.trans[1] -= diff; 
+        state.u = !state.u;
+        if(state.u){ // toggle move up
+            state.y = false;
+        }
         break;
         case "y":
-        state.trans[1] += diff; 
+        state.y = !state.y;
+        if(state.y){ // toggle move down
+            state.u = false;
+        }
         break;
         case "z":
-        state.trans[2] += diff; 
+        state.z = !state.z;
+        if(state.z){ // toggle move forwards
+            state.a = false;
+        }
         break;
         case "a":
-        state.trans[2] -= diff; 
+        state.a = !state.a;
+        if(state.a){ // toggle move backwards
+            state.z = false;
+        }
         break;
 
         case "r":
-        // rotate
-        state.rotate[0] += 10 * diff;  // check direction
+        state.r = !state.r; // toggle rotate
         break; 
         case "b":
-        pulse = !pulse; 
-        if(!pulse) {
-            pulseFactor = - Math.PI / 2; 
-        }
+        state.b = !state.b; // toggle pulse
+        pulse = state.b; 
         break;
     }
     change = true; 
     setupCurrent();
 }
 
+/**
+ * Poll for a change event every 80 millseconds
+ */
 async function tick() {
+    let diff = .1 
     while(true){
+        // set the state according to which state(s) are toggled on 
+        if(state.x){
+            state.trans[0] += diff; 
+            change = true; 
+        }
+        if(state.c){
+            state.trans[0] -= diff; 
+            change = true; 
+        }
+        if(state.u){
+            state.trans[1] -= diff; 
+            change = true; 
+        }
+        if(state.y){
+            state.trans[1] += diff;
+            change = true; 
+        }
+        if(state.z){
+            state.trans[2] += diff; 
+            change = true; 
+        }
+        if(state.a){
+            state.trans[2] -= diff; 
+            change = true; 
+        }
+        if(state.r){
+            state.rotate[0] += 10 * diff;  
+            change = true; 
+        }
+        if(state.b){
+            change = true; 
+        }
+
         if(change){
+            setupCurrent();
             requestAnimationFrame(drawPostSetup); 
             change = false; 
         }
@@ -219,6 +287,9 @@ function load_file() {
     }
 }
 
+/**
+ * calculate the pulse transformation for a given face
+ */
 function calculatePulse(triangle) {
     // draw each face
     let a = subtract(triangle[0], triangle[1])
@@ -235,6 +306,9 @@ function calculatePulse(triangle) {
 
 }
 
+/**
+ * Determine how far the camera should move away for the current drawing
+ */
 function calculateViewDistance() {
     // so, sin (1/2 fov) * z diff = xmin / xmax
     let rads = fovy / 2 * Math.PI / 180;
@@ -285,17 +359,16 @@ function setupCurrent() {
     gl.uniformMatrix4fv(modelView, false, flatten(mvMatrix));
 }
 
-async function drawPostSetup() {
+/**
+ * draw each face after the global transformations have been calculated
+ */
+function drawPostSetup() {
     clear_canvas();
     current_drawing.triangles.forEach(element => {
         drawFace(element)
     });
     if(pulse) {
         pulseFactor += .1
-        change = true; 
-        // await sleep(700); 
-        // drawPostSetup();
-        // requestAnimationFrame(drawPostSetup)
     }
 
 }
@@ -454,16 +527,20 @@ function parse_file(input_str) {
         ])
     })
 
-
     current_drawing = {}
     current_drawing.verts = vertlist;
     current_drawing.faces = facelist;
     current_drawing.triangles = triangles
 
+    // setup the current drawing
     setupCurrent()
 
 }
 
+/**
+ * Helper function to slow down event loop
+ * based on a stack overflow entry / MSDN documentation
+ */
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
