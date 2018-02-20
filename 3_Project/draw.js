@@ -17,6 +17,22 @@ const up = vec3(0.0, 1.0, 0.0);
 
 var stack = [];
 
+var shapes = []; // list of shapes to be drawn 
+var transforms = [];
+/**
+  Transform: 
+  {
+      radius: int
+      theta: rotation around self
+      beta: rotation around parent center
+      color: color to draw thing // todo might be more complex
+      trans: (mv) => newMv
+      parentIndex: of parent
+  }
+   --> for each shape draw with transform
+ */
+
+
 function main()
 {
 	// Retrieve <canvas> element
@@ -108,38 +124,96 @@ function sphere() {
 
 function render()
 {
-    var redCube = cube();
-    var blueCube = cube();
-    var greenCube = cube();
-    var magentaCube = cube();
+    // shapes.push(cube());
+    // shapes.push(cube());
 
+    //--------------------------------------------------------  Shape 1
+    shapes.push(cube());
     pMatrix = perspective(fovy, aspect, .1, 10);
     gl.uniformMatrix4fv( projection, false, flatten(pMatrix) );
 
     eye = vec3(0, 0, 4);
     mvMatrix = lookAt(eye, at , up);
+    // would store the transform as well here
+    stack.push(mvMatrix); // stack[0] = first
+    transforms.push({
+        radius: 0, 
+        theta: 0, 
+        beta: 0,
+        color: vec4(0,1,0,1), 
+        parentIndex: 0, 
+        trans: () => { return 0; }
+    });
 
-    stack.push(mvMatrix);
-    mvMatrix = mult(rotateZ(45), mvMatrix);
-    gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
-    draw(redCube, vec4(1.0, 0.0, 0.0, 1.0));
+    //--------------------------------------------------------  Shape 2
+    shapes.push(cube());
 
-    mvMatrix = mult(mvMatrix, translate(-1, -1, -1));
-    gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
-    draw(magentaCube, vec4(1.0, 0.0, 1.0, 1.0));
+    transforms.push({
+        color: vec4(1,0,0,1),
+        parentIndex: 0, 
+        trans: (mv) => {
+            console.log("Trans");
+            return mult(rotateZ(45), mv); 
+        }
+    });
 
-    mvMatrix = stack.pop();
-    stack.push(mvMatrix);
-    mvMatrix = mult(mvMatrix, translate(1, 1, 1));
-    gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
-    draw(blueCube, vec4(0.0, 0.0, 1.0, 1.0));
+    shapes.push(cube());
 
-    mvMatrix = stack.pop();
-    mvMatrix = mult(mvMatrix, translate(-1, -1, -1));
-    gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
-    draw(greenCube, vec4(0.0, 1.0, 0.0, 1.0));
+    transforms.push({
+        color: vec4(0,0,1,1),
+        parentIndex: 1, 
+        trans: (mv) => {
+            console.log("Trans");
+            return mult(rotateZ(10), mv); 
+        }
+    });
 
+    // mvMatrix = mult(rotateZ(45), mvMatrix);
 
+    // gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
+    // draw(redCube, vec4(1.0, 0.0, 0.0, 1.0));
+
+    // //--------------------------------------------------------  Shape 3
+
+    // mvMatrix = mult(mvMatrix, translate(-1, -1, -1));
+    // gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
+    // draw(magentaCube, vec4(1.0, 0.0, 1.0, 1.0));
+
+    // //--------------------------------------------------------  Shape 4
+
+    // mvMatrix = stack.pop();
+    // stack.push(mvMatrix);
+    // mvMatrix = mult(mvMatrix, translate(1, 1, 1));
+    // gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
+    // draw(blueCube, vec4(0.0, 0.0, 1.0, 1.0));
+
+    // mvMatrix = stack.pop();
+    // mvMatrix = mult(mvMatrix, translate(-1, -1, -1));
+    // gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
+    // draw(greenCube, vec4(0.0, 1.0, 0.0, 1.0));
+    drawShapes(); 
+}
+
+function drawShapes() {
+    let getMvMatrix = (index) => {
+        let parentIndex = transforms[index].parentIndex;
+        console.log(parentIndex)
+        if (stack.length > index){
+            return stack[index];
+        }
+        else {
+            let currentTrans = transforms[index].trans(getMvMatrix(parentIndex)); 
+            stack[index] = currentTrans; 
+            return currentTrans; 
+        }
+    }
+
+    shapes.forEach((shape, index) => {
+        let mvMatrix = getMvMatrix(index);
+        console.log(mvMatrix)
+        gl.uniformMatrix4fv(modelView, false, flatten(mvMatrix));
+        draw(shape, transforms[index].color);
+    });
 }
 
 function draw(cube, color)
