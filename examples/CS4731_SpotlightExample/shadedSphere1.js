@@ -114,7 +114,7 @@ window.onload = function init() {
 
 
     // tetrahedron(va, vb, vc, vd, numTimesToSubdivide);
-    tetrahedron(va, vb, vc, vd, numTimesToSubdivide);
+    tetrahedron(va, vb, vc, vd, 4);
 
     var nBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
