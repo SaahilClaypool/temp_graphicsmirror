@@ -216,15 +216,14 @@ function render() {
         parentIndex: 1, 
         offset: 0, 
         rot: (index, mv) => {
-            transforms[index].offset += 10; 
+            transforms[index].offset += 15; 
             return mult (
                 mv,
-                rotateY(-1 * (45 + transforms[index].offset)),
+                rotateY(1 * (45 + transforms[index].offset)),
             );
         },
         trans: (index, mv) => { 
             // shift up
-            transforms[index].offset += 10; 
             return mult(
                 mv,
                 translate(-1, -3, 0),
@@ -239,13 +238,13 @@ function render() {
         parentIndex: 2, // purple circle
         offset: 0, 
         rot: (index, mv) => {
-            transforms[index].offset += 10; 
-            return mv; 
-            // return mult (
-            //     mv,
-            // 	rotateY(-1 * (45 + transforms[index].offset)),
-            // 	rotateY(0),
-            // );
+            transforms[index].offset += 5; 
+            // return mv; 
+            return mult (
+                mv,
+            	rotateY(-1 * (45 + transforms[index].offset)),
+            	rotateY(0),
+            );
         },
         trans: (index, mv) => { 
             // shift up
@@ -259,7 +258,7 @@ function render() {
     });
 
     transforms.push({
-        color: vec4(1, 0, .5, 1), // red
+        color: vec4(1, 0, .5, 1), // pink
         shape: 'cube',
         parentIndex: 4, // Thing below circle
         offset: 0, 
