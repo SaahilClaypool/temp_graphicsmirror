@@ -18,15 +18,15 @@ const up = vec3(0.0, 1.0, 0.0);
 var stack = [];
 
 var shapes = {
-	sphere: sphere(),
-	cube: cube(),
+    sphere: sphere(),
+    cube: cube(),
 }; // list of shapes to be drawn 
 var transforms = [];
 /**
   Transform: 
   {
-	  color: color to draw thing // todo might be more complex
-	  trans: (index, mv) => newMv
+      color: color to draw thing // todo might be more complex
+  trans: (index, mv) => newMv
 	  parentIndex: of parent
   }
    --> for each shape draw with transform
@@ -132,8 +132,8 @@ function sphere() {
 	var vc = vec4(-0.816497, -0.471405, 0.333333, 1);
 	var vd = vec4(0.816497, -0.471405, 0.333333, 1);
 
-	tetrahedron(va, vb, vc, vd, 4);
-	return pointsArray
+    tetrahedron(va, vb, vc, vd, 4);
+    return pointsArray
 }
 
 
@@ -149,20 +149,18 @@ function render() {
 		color: vec4(0, 1, 0, 1),// green
 		shape: 'cube',
 		parentIndex: -1, // no parent
-		offset : 0,
-		trans: (index, mv) => { 
+        offset : 0,
+        rot: (index, mv) => {
 			transforms[index].offset += 4; 
-			// return mult (
-			//     translate(0,2,-3), 
-			//     mv
-			// );
-			// shift up
-			return mult(
-				translate(0, 2, -10),
-				mult (
+            return mult(
+                mv, 
+                rotateY(45 + transforms[index].offset),
+            )
+        },
+		trans: (index, mv) => { 
+			return mult (
                     mv,
-					rotateY(45 + transforms[index].offset),
-				)
+                    translate(0, 5, -15),
 			); 
 		}
 	});
@@ -171,12 +169,15 @@ function render() {
 	transforms.push({
 		color: vec4(0, 0, 1, 1), // blue
 		shape: 'sphere',
-		parentIndex: 0, // no parent
+        parentIndex: 0, // no parent
+        rot: (index, mv) => {
+            return mv;
+        },
 		trans: (index, mv) => { 
 			// shift up
 			return mult(
 				mv,
-				translate(-1,-1.5,0), 
+				translate(-1,-2,0), 
 			); 
 		}
 	});
@@ -187,18 +188,20 @@ function render() {
 		shape: 'sphere',
 		parentIndex: 1, // no parent
 		offset: 0, 
+        rot: (index, mv) => {
+			transforms[index].offset += 10; 
+            return mult (
+                mv,
+				rotateY(-1 * (45 + transforms[index].offset)),
+            );
+        },
 		trans: (index, mv) => { 
 			// shift up
-			transforms[index].offset += 10; 
 			return mult (
-				mult(
 					mv,
-					translate(1,-1.5,1),
+					translate(3,-3,1),
 					// rotateY(0),
-				),
-				rotateY(-1 * (45 + transforms[index].offset)),
-				// rotateY(0),
-			);
+                );
 		}
 	});
 
@@ -208,18 +211,20 @@ function render() {
 		shape: 'cube',
 		parentIndex: 1, 
 		offset: 0, 
+        rot: (index, mv) => {
+			transforms[index].offset += 10; 
+            return mult (
+                mv,
+				rotateY(-1 * (45 + transforms[index].offset)),
+            );
+        },
 		trans: (index, mv) => { 
 			// shift up
 			transforms[index].offset += 10; 
-			return mult (
-				mult(
-					mv,
-					translate(-1,-1.5,-1),
-					// rotateY(0),
-				),
-				rotateY(-1 * (45 + transforms[index].offset)),
-				// rotateY(0),
-			);
+            return mult(
+                mv,
+                translate(-1, -1.5, -1),
+            );
 		}
 	});
 
@@ -229,18 +234,21 @@ function render() {
 		shape: 'sphere',
 		parentIndex: 2, // purple circle
 		offset: 0, 
+        rot: (index, mv) => {
+			transforms[index].offset += 10; 
+            return mult (
+                mv,
+				rotateY(-1 * (45 + transforms[index].offset)),
+            );
+        },
 		trans: (index, mv) => { 
 			// shift up
-			transforms[index].offset += 10; 
-			return mult (
-				mult(
-					mv,
-					translate(-1,-1.5,-1),
-					// rotateY(0),
-				),
-				rotateY(-1 * (45 + transforms[index].offset)),
-				// rotateY(0),
-			);
+            return mult(
+                mv,
+                translate(-1, -1.5, -1),
+                // rotateY(0),
+                // rotateY(0),
+            );
 		}
 	});
 
@@ -249,87 +257,27 @@ function render() {
 		shape: 'cube',
 		parentIndex: 4, // Thing below circle
 		offset: 0, 
-		trans: (index, mv) => { 
-			// shift up
-			transforms[index].offset += 10; 
-			return mult (
-				mult(
-					mv,
-					translate(-1,-1.5,-1),
-					// rotateY(0),
-				),
-				rotateY(-1 * (45 + transforms[index].offset)),
+        rot: (index, mv) => {
+            transforms[index].offset += 100; 
+            return mult (
+                mv,
+				rotateY((45 + transforms[index].offset)),
 				// rotateY(0),
-			);
+            );
+        },
+		trans: (index, mv) => { 
+            return mult(
+                mv,
+                translate(-1, -1.5, 0),
+                // rotateY(0),
+            );
 		}
-	});
+    });
 
-	//--------------------------------------------------------  Shape 2
-
-	// transforms.push({
-	//     color: vec4(1, 0, 0, 1),
-	//     parentIndex: 0,
-	//     shape: 'cube',
-	//     offset: 0,
-	//     trans: (index, mv) => {
-	//         transforms[index].offset += 4; 
-	//         return mult(rotateZ(45 + transforms[index].offset), mv);
-	//     }
-	// });
-
-
-	// transforms.push({
-	//     color: vec4(0, 0, 1, 1),
-	//     parentIndex: 1,
-	//     shape: 'cube',
-	//     trans: (index, mv) => {
-	//         return mult(rotateZ(10), mv);
-	//     }
-	// });
-
-	// transforms.push({
-	//     color: vec4(0, 0, 1, 1),
-	//     parentIndex: 2,
-	//     shape: 'cube',
-	//     offset: 0, 
-	//     trans: (index, mv) => {
-	// // mvMatrix = mult(mvMatrix, translate(-1, -1, -1));
-	//         transforms[index].offset += 10; 
-	//         let offset = transforms[index].offset
-	//         return mult(
-	//             mv,
-	//             mult(translate(-1,-1,-1), rotateZ(45+offset))
-	//         );
-	//     }
-	// });
-
-	// mvMatrix = mult(rotateZ(45), mvMatrix);
-
-	// gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
-	// draw(redCube, vec4(1.0, 0.0, 0.0, 1.0));
-
-	// //--------------------------------------------------------  Shape 3
-
-	// mvMatrix = mult(mvMatrix, translate(-1, -1, -1));
-	// gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
-	// draw(magentaCube, vec4(1.0, 0.0, 1.0, 1.0));
-
-	// //--------------------------------------------------------  Shape 4
-
-	// mvMatrix = stack.pop();
-	// stack.push(mvMatrix);
-	// mvMatrix = mult(mvMatrix, translate(1, 1, 1));
-	// gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
-	// draw(blueCube, vec4(0.0, 0.0, 1.0, 1.0));
-
-	// mvMatrix = stack.pop();
-	// mvMatrix = mult(mvMatrix, translate(-1, -1, -1));
-	// gl.uniformMatrix4fv( modelView, false, flatten(mvMatrix) );
-	// draw(greenCube, vec4(0.0, 1.0, 0.0, 1.0));
 	animate(1);
 }
 
-var animationNumber = 100;
+var animationNumber = 1000;
 
 async function animate(x) {
 	if (x > animationNumber) {
@@ -343,44 +291,48 @@ async function animate(x) {
 }
 
 function drawConnection (parentTrans, currentTrans) { 
-	let start = mult(parentTrans, vec4(0, 0, 0, 1)),
-        end = mult(currentTrans, vec4(0, 0, 0, 1));
-    start[1] = end[1]
+	// let start = mult(parentTrans, vec4(0, 0, 0, 1)),
+    //     end = mult(currentTrans, vec4(0, 0, 0, 1));
+    // console.log(start)
+    // console.log(end)
+    // end[0] *= 1.1
+    // end[1] += 1
+    // start[1] = end[1]
 
-    console.log(parentTrans)
-    gl.uniformMatrix4fv(modelView, false, flatten(mvMatrix));
+    // gl.uniformMatrix4fv(modelView, false, flatten(mvMatrix));
 
-    let cube = [start, end]
-    let color = vec4(0,0,0,1)
+    // let cube = [start, end]
+    // let color = vec4(0,0,0,1)
 
-	var fragColors = [];
+	// var fragColors = [];
 
-	for (var i = 0; i < cube.length; i++) {
-		fragColors.push(color);
-	}
+	// for (var i = 0; i < cube.length; i++) {
+	// 	fragColors.push(color);
+	// }
 
-	var pBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, flatten(cube), gl.STATIC_DRAW);
+	// var pBuffer = gl.createBuffer();
+	// gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
+	// gl.bufferData(gl.ARRAY_BUFFER, flatten(cube), gl.STATIC_DRAW);
 
-	var vPosition = gl.getAttribLocation(program, "vPosition");
-	gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(vPosition);
+	// var vPosition = gl.getAttribLocation(program, "vPosition");
+	// gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
+	// gl.enableVertexAttribArray(vPosition);
 
-	var cBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, flatten(fragColors), gl.STATIC_DRAW);
+	// var cBuffer = gl.createBuffer();
+	// gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+	// gl.bufferData(gl.ARRAY_BUFFER, flatten(fragColors), gl.STATIC_DRAW);
 
-	var vColor = gl.getAttribLocation(program, "vColor");
-	gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-	gl.enableVertexAttribArray(vColor);
+	// var vColor = gl.getAttribLocation(program, "vColor");
+	// gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+	// gl.enableVertexAttribArray(vColor);
 
-	gl.drawArrays(gl.LINE_LOOP, 0, cube.length);
+	// gl.drawArrays(gl.LINES, 0, cube.length);
     
  }
 
 function drawShapes() {
-	stack = []
+    stack = []
+    transStack = []
 	let getMvMatrix = (index) => {
 		if (index == -1) {
 			return mvMatrix; 
@@ -391,9 +343,11 @@ function drawShapes() {
 		}
 		else {
 			let cur = transforms[index]
-			let currentTrans = cur.trans(index, getMvMatrix(parentIndex));
-			stack[index] = currentTrans;
-			return [getMvMatrix(parentIndex), currentTrans];
+            let currentTrans = cur.trans(index, getMvMatrix(parentIndex));
+            let currentRot = cur.rot(index, currentTrans);
+            stack[index] = currentRot;
+            transStack[index] = currentTrans; 
+			return [getMvMatrix(parentIndex), currentRot];
 		}
 	}
 
