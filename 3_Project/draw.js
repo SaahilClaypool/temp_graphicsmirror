@@ -151,7 +151,7 @@ function render() {
     //--------------------------------------------------------  Shape 0 Green root
     transforms.push({
         color: vec4(0, 1, 0, 1),// green
-        shape: 'cube',
+        shape: 'sphere',
         parentIndex: -1, // no parent
         offset : 0,
         rot: (index, mv) => {
