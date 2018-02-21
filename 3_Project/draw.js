@@ -138,62 +138,172 @@ function sphere() {
 
 
 function render() {
-    //--------------------------------------------------------  Shape 1
-    pMatrix = perspective(fovy, aspect, .1, 10);
+    pMatrix = perspective(fovy, aspect, .1, 45);
     gl.uniformMatrix4fv(projection, false, flatten(pMatrix));
 
     eye = vec3(0, 0, 4);
     mvMatrix = lookAt(eye, at, up);
     // would store the transform as well here
-    stack.push(mvMatrix); // stack[0] = first
+    // stack.push(mvMatrix); // stack[0] = first
+    // Put the root of mobile here
+
+    //--------------------------------------------------------  Shape 0 Green root
     transforms.push({
-        radius: 0,
-        theta: 0,
-        beta: 0,
-        color: vec4(0, 1, 0, 1),
+        color: vec4(0, 1, 0, 1),// green
         shape: 'cube',
-        parentIndex: 0,
-        trans: () => { return 0; }
+        parentIndex: -1, // no parent
+        offset : 0,
+        trans: (index, mv) => { 
+            transforms[index].offset += 4; 
+            // return mult (
+            //     translate(0,2,-3), 
+            //     mv
+            // );
+            // shift up
+            return mult(
+                translate(0, 2, -10),
+                mult (mv,
+                    rotateY(45 + transforms[index].offset),
+                )
+            ); 
+        }
+    });
+
+    //--------------------------------------------------------  Shape 1 blue second level 
+    transforms.push({
+        color: vec4(0, 0, 1, 1), // blue
+        shape: 'sphere',
+        parentIndex: 0, // no parent
+        trans: (index, mv) => { 
+            // shift up
+            return mult(
+                mv,
+                translate(-1,-1.5,0), 
+            ); 
+        }
+    });
+
+    //--------------------------------------------------------  Shape 2 purple circle third level
+    transforms.push({
+        color: vec4(.5, 0, 1, 1), // purple circle
+        shape: 'sphere',
+        parentIndex: 1, // no parent
+        offset: 0, 
+        trans: (index, mv) => { 
+            // shift up
+            transforms[index].offset += 10; 
+            return mult (
+                mult(
+                    mv,
+                    translate(1,-1.5,1),
+                    // rotateY(0),
+                ),
+                rotateY(-1 * (45 + transforms[index].offset)),
+                // rotateY(0),
+            );
+        }
+    });
+
+    //--------------------------------------------------------  Shape 3 red square thirdlevel
+    transforms.push({
+        color: vec4(1, 0, 0, 1), // red
+        shape: 'cube',
+        parentIndex: 1, 
+        offset: 0, 
+        trans: (index, mv) => { 
+            // shift up
+            transforms[index].offset += 10; 
+            return mult (
+                mult(
+                    mv,
+                    translate(-1,-1.5,-1),
+                    // rotateY(0),
+                ),
+                rotateY(-1 * (45 + transforms[index].offset)),
+                // rotateY(0),
+            );
+        }
+    });
+
+    //--------------------------------------------------------  Shape 4 red 
+    transforms.push({
+        color: vec4(1, 0, 0, 1), // red
+        shape: 'sphere',
+        parentIndex: 2, // purple circle
+        offset: 0, 
+        trans: (index, mv) => { 
+            // shift up
+            transforms[index].offset += 10; 
+            return mult (
+                mult(
+                    mv,
+                    translate(-1,-1.5,-1),
+                    // rotateY(0),
+                ),
+                rotateY(-1 * (45 + transforms[index].offset)),
+                // rotateY(0),
+            );
+        }
+    });
+
+    transforms.push({
+        color: vec4(1, 0, 0, 1), // red
+        shape: 'cube',
+        parentIndex: 4, // Thing below circle
+        offset: 0, 
+        trans: (index, mv) => { 
+            // shift up
+            transforms[index].offset += 10; 
+            return mult (
+                mult(
+                    mv,
+                    translate(-1,-1.5,-1),
+                    // rotateY(0),
+                ),
+                rotateY(-1 * (45 + transforms[index].offset)),
+                // rotateY(0),
+            );
+        }
     });
 
     //--------------------------------------------------------  Shape 2
 
-    transforms.push({
-        color: vec4(1, 0, 0, 1),
-        parentIndex: 0,
-        shape: 'cube',
-        offset: 0,
-        trans: (index, mv) => {
-            transforms[index].offset += 4; 
-            return mult(rotateZ(45 + transforms[index].offset), mv);
-        }
-    });
+    // transforms.push({
+    //     color: vec4(1, 0, 0, 1),
+    //     parentIndex: 0,
+    //     shape: 'cube',
+    //     offset: 0,
+    //     trans: (index, mv) => {
+    //         transforms[index].offset += 4; 
+    //         return mult(rotateZ(45 + transforms[index].offset), mv);
+    //     }
+    // });
 
 
-    transforms.push({
-        color: vec4(0, 0, 1, 1),
-        parentIndex: 1,
-        shape: 'cube',
-        trans: (index, mv) => {
-            return mult(rotateZ(10), mv);
-        }
-    });
+    // transforms.push({
+    //     color: vec4(0, 0, 1, 1),
+    //     parentIndex: 1,
+    //     shape: 'cube',
+    //     trans: (index, mv) => {
+    //         return mult(rotateZ(10), mv);
+    //     }
+    // });
 
-    transforms.push({
-        color: vec4(0, 0, 1, 1),
-        parentIndex: 2,
-        shape: 'cube',
-        offset: 0, 
-        trans: (index, mv) => {
-    // mvMatrix = mult(mvMatrix, translate(-1, -1, -1));
-            transforms[index].offset += 10; 
-            let offset = transforms[index].offset
-            return mult(
-                mv,
-                mult(translate(-1,-1,-1), rotateZ(45+offset))
-            );
-        }
-    });
+    // transforms.push({
+    //     color: vec4(0, 0, 1, 1),
+    //     parentIndex: 2,
+    //     shape: 'cube',
+    //     offset: 0, 
+    //     trans: (index, mv) => {
+    // // mvMatrix = mult(mvMatrix, translate(-1, -1, -1));
+    //         transforms[index].offset += 10; 
+    //         let offset = transforms[index].offset
+    //         return mult(
+    //             mv,
+    //             mult(translate(-1,-1,-1), rotateZ(45+offset))
+    //         );
+    //     }
+    // });
 
     // mvMatrix = mult(rotateZ(45), mvMatrix);
 
@@ -221,8 +331,10 @@ function render() {
     animate(1);
 }
 
+var animationNumber = 1000;
+
 async function animate(x) {
-    if (x > 1000) {
+    if (x > animationNumber) {
         return;
     }
     else {
@@ -233,8 +345,11 @@ async function animate(x) {
 }
 
 function drawShapes() {
-    stack = [stack[0]]
+    stack = []
     let getMvMatrix = (index) => {
+        if (index == -1) {
+            return mvMatrix; 
+        }
         let parentIndex = transforms[index].parentIndex;
         if (stack.length > index) {
             return stack[index];
