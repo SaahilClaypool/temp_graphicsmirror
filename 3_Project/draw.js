@@ -342,13 +342,16 @@ function drawConnection (parentTrans, currentTrans, center) {
     start = mult(parentTrans, vec4(0, 0, 0, 1)),
         end = mult(currentTrans, vec4(0, 0, 0, 1));
 
-    start[1] += center
-    end[1] += center
+    // start[1] += center
+    start[1] = hself[1];
     // end[0] = start[0]
-    start[0] = end[0]
+    start[0] = hself[0]
+    start[2] = hself[2]
+    end[0] = hself[0]
+    end[2] = hself[2]
 
 
-    cube = [start, end]
+    cube = [end,start]
     color = vec4(0,0,0,1)
 
     fragColors = [];
