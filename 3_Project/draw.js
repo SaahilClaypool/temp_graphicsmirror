@@ -15,6 +15,7 @@ var eye;
 const at = vec3(0.0, 0.0, 0.0);
 const up = vec3(0.0, 1.0, 0.0);
 
+
 var stack = [];
 
 var shapes = {
@@ -32,6 +33,18 @@ var transforms = [];
    --> for each shape draw with transform
  */
 
+// light
+// var lightPosition = vec4(1.0, 1.0, 1.0, 1.0 );
+// var lightPosition = vec4(-10.0, 10.0, 10.0, 1.0 );
+var lightPosition = vec4(-5, 5.0, 0.0, 1.0 );
+var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
+var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
+var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
+
+var materialAmbient = vec4( 1.0, 0.0, 1.0, 1.0 );
+var materialDiffuse = vec4( 1.0, 0.8, 0.0, 1.0 );
+var materialSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
+var materialShininess = 20;
 
 function main() {
     // Retrieve <canvas> element
@@ -66,7 +79,22 @@ function main() {
     projection = gl.getUniformLocation(program, "projectionMatrix");
     modelView = gl.getUniformLocation(program, "modelMatrix");
 
+    var ambientProduct = mult(lightAmbient, materialAmbient);
+    var diffuseProduct = mult(lightDiffuse, materialDiffuse);
+    var specularProduct = mult(lightSpecular, materialSpecular);
+
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    gl.uniform4fv( gl.getUniformLocation(program,
+       "ambientProduct"),flatten(ambientProduct) );
+    gl.uniform4fv( gl.getUniformLocation(program,
+       "diffuseProduct"),flatten(diffuseProduct) );
+    gl.uniform4fv( gl.getUniformLocation(program,
+       "specularProduct"),flatten(specularProduct) );
+    gl.uniform4fv( gl.getUniformLocation(program,
+       "lightPosition"),flatten(lightPosition) );
+    gl.uniform1f( gl.getUniformLocation(program,
+       "shininess"),materialShininess );
 
     render();
 }
@@ -330,9 +358,9 @@ function drawConnection (parentTrans, currentTrans, center) {
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(fragColors), gl.STATIC_DRAW);
 
-    var vColor = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor);
+    // var vColor = gl.getAttribLocation(program, "vColor");
+    // gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+    // gl.enableVertexAttribArray(vColor);
 
     gl.drawArrays(gl.LINES, 0, cube.length);
 
@@ -371,9 +399,9 @@ function drawConnection (parentTrans, currentTrans, center) {
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(fragColors), gl.STATIC_DRAW);
 
-    var vColor = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor);
+    // var vColor = gl.getAttribLocation(program, "vColor");
+    // gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+    // gl.enableVertexAttribArray(vColor);
 
     gl.drawArrays(gl.LINES, 0, cube.length);
     
@@ -437,9 +465,9 @@ function draw(cube, color) {
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(fragColors), gl.STATIC_DRAW);
 
-    var vColor = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor);
+    // var vColor = gl.getAttribLocation(program, "vColor");
+    // gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+    // gl.enableVertexAttribArray(vColor);
 
     gl.drawArrays(gl.TRIANGLES, 0, cube.length);
 
