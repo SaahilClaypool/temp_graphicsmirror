@@ -12,7 +12,7 @@ var program;
 var mvMatrix, pMatrix;
 var modelView, projection;
 var eye;
-const at = vec3(0.0, 0.0, 0.0);
+const at = vec3(0.0, 0.0, -15);
 const up = vec3(0.0, 1.0, 0.0);
 
 
@@ -35,31 +35,39 @@ var transforms = [];
 
 // light
 // var lightPosition = vec4(1.0, 1.0, 1.0, 1.0 );
-var lightPosition = vec4(-15.0, 25.0, -10, 1.0 );
 // var lightPosition = vec4(-5, 5.0, 0.0, 1.0 );
-var lightPosition = vec4(0,0,0);
+var lightPosition = vec4(0,-.8,-7);
 var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
-var lightDiffuse = vec4( .50, 0.0, .50, .50 );
-var lightSpecular = vec4( 0.0, 1.0, 1.0, .50 );
+var lightDiffuse = vec4( 1.0, 0.0, 0.0, 1.0 );
+var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
+// var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
+// var lightDiffuse = vec4(1, 1, 1, 1);
+// var lightSpecular = vec4(1, 1, 1, 1);
 
 var materials = {
     "brass": {
         materialAmbient: vec4(0.329412, 0.223529, 0.027451, 1),
         materialDiffuse: vec4(0.780392, 0.568627, 0.113725, 1.0),
         materialSpecular: vec4(0.992157, 0.941176, 0.807843, 1),
-        materialShininess: 27.8974,
+        materialShininess: 84,
     }, 
+    "custom": {
+        materialAmbient: vec4(1.0, 0.0, 1.0, 1.0),
+        materialDiffuse: vec4(0.0, 0.8, 0.0, 0.5),
+        materialSpecular: vec4(1.0, 1, 1, 1.0),
+        materialShininess: 100,
+    },
     "silver": {
         materialAmbient: vec4(0.23125,0.23125,0.23125,1),
         materialDiffuse: vec4(0.2775,0.2775,0.2775,1),
         materialSpecular: vec4(0.773911, 0.773911, 0.773911, 1),
-        materialShininess: 89.6, 
+        materialShininess: 1, 
     },
     "plastic": {
         materialAmbient: vec4(0,0,0,1),
         materialDiffuse: vec4(.1,.1,.1),
         materialSpecular: vec4(.5,.5,.5),
-        materialShininess: 32,
+        materialShininess: 1,
     }
 }
 
@@ -165,7 +173,7 @@ function sphere() {
     var vc = vec4(-0.816497, -0.471405, 0.333333, 1);
     var vd = vec4(0.816497, -0.471405, 0.333333, 1);
 
-    tetrahedron(va, vb, vc, vd, 4);
+    tetrahedron(va, vb, vc, vd, 5);
     return pointsArray
 }
 
@@ -174,7 +182,7 @@ function render() {
     pMatrix = perspective(fovy, aspect, .1, 45);
     gl.uniformMatrix4fv(projection, false, flatten(pMatrix));
 
-    eye = vec3(0, 0, 0);
+    eye = vec3(0, 0,0);
     mvMatrix = lookAt(eye, at, up);
 
     //--------------------------------------------------------  Shape 0 Green root
@@ -221,7 +229,7 @@ function render() {
     transforms.push({
         color: vec4(1, 0, 1, 1), // purple circle
         shape: 'sphere',
-        material: "plastic", 
+        material: "custom", 
         parentIndex: 1, // no parent
         offset: 0, 
         rot: (index, mv) => {
