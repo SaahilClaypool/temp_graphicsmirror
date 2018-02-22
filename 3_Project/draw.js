@@ -62,10 +62,6 @@ var materials = {
         materialShininess: 32,
     }
 }
-var materialAmbient = vec4(0.329412,0.223529, 0.027451, 1);
-var materialDiffuse = vec4(0.780392, 0.568627, 0.113725, 1.0 );
-var materialSpecular = vec4(0.992157, 0.941176, 0.807843,1);
-var materialShininess = 27.8974;
 
 function main() {
     // Retrieve <canvas> element
@@ -100,22 +96,6 @@ function main() {
     projection = gl.getUniformLocation(program, "projectionMatrix");
     modelView = gl.getUniformLocation(program, "modelMatrix");
 
-    var ambientProduct = mult(lightAmbient, materialAmbient);
-    var diffuseProduct = mult(lightDiffuse, materialDiffuse);
-    var specularProduct = mult(lightSpecular, materialSpecular);
-
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    gl.uniform4fv( gl.getUniformLocation(program,
-       "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-       "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-       "specularProduct"),flatten(specularProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-       "lightPosition"),flatten(lightPosition) );
-    gl.uniform1f( gl.getUniformLocation(program,
-       "shininess"),materialShininess );
 
     render();
 }
@@ -200,6 +180,7 @@ function render() {
     //--------------------------------------------------------  Shape 0 Green root
     transforms.push({
         color: vec4(0, 1, 0, 1),// green
+        material: "brass", 
         shape: 'sphere',
         parentIndex: -1, // no parent
         offset : 0,
@@ -221,6 +202,7 @@ function render() {
     //--------------------------------------------------------  Shape 1 blue second level 
     transforms.push({
         color: vec4(0, 0, 1, 1), // blue
+        material: "silver", 
         shape: 'sphere',
         parentIndex: 0, // no parent
         rot: (index, mv) => {
@@ -239,6 +221,7 @@ function render() {
     transforms.push({
         color: vec4(1, 0, 1, 1), // purple circle
         shape: 'sphere',
+        material: "plastic", 
         parentIndex: 1, // no parent
         offset: 0, 
         rot: (index, mv) => {
@@ -261,6 +244,7 @@ function render() {
     //--------------------------------------------------------  Shape 3 red square thirdlevel
     transforms.push({
         color: vec4(1, 0, 0, 1), // red
+        material: "brass", 
         shape: 'cube',
         parentIndex: 1, 
         offset: 0, 
@@ -283,6 +267,7 @@ function render() {
     //--------------------------------------------------------  Shape 4 red 
     transforms.push({
         color: vec4(1, 0, 0, 1), // red
+        material: "silver", 
         shape: 'cube',
         parentIndex: 2, // purple circle
         offset: 0, 
@@ -291,8 +276,8 @@ function render() {
             // return mv; 
             return mult (
                 mv,
-            	rotateY(-1 * (45 + transforms[index].offset)),
-            	rotateY(0),
+                rotateY(-1 * (45 + transforms[index].offset)),
+                rotateY(0),
             );
         },
         trans: (index, mv) => { 
@@ -308,6 +293,7 @@ function render() {
 
     transforms.push({
         color: vec4(1, 0, .5, 1), // pink
+        material: "brass", 
         shape: 'cube',
         parentIndex: 4, // Thing below circle
         offset: 0, 
@@ -339,6 +325,7 @@ async function animate(x) {
         return;
     }
     else {
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         drawShapes(x); 
         await sleep(50)
         animate(x + 1);
@@ -418,7 +405,7 @@ function drawConnection (parentTrans, currentTrans, center) {
 
     var cBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(fragColors), gl.STATIC_DRAW);
+    // gl.bufferData(gl.ARRAY_BUFFER, flatten(fragColors), gl.STATIC_DRAW);
 
     // var vColor = gl.getAttribLocation(program, "vColor");
     // gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
@@ -455,7 +442,7 @@ function drawShapes() {
         let mvMatrix = transMats[1],
             parentMat = transMats[0];
         gl.uniformMatrix4fv(modelView, false, flatten(mvMatrix));
-        draw(shape, transforms[index].color);
+        draw(shape, transforms[index].material);
         
         if(trans.parentIndex >= 0){
             var center = .3;
@@ -467,12 +454,27 @@ function drawShapes() {
     });
 }
 
-function draw(cube, color) {
-    var fragColors = [];
+function draw(cube, materialType) {
 
-    for (var i = 0; i < cube.length; i++) {
-        fragColors.push(color);
-    }
+    var materialAmbient = materials[materialType].materialAmbient; 
+    var materialDiffuse = materials[materialType].materialDiffuse; 
+    var materialSpecular = materials[materialType].materialSpecular; 
+    var materialShininess = materials[materialType].materialShininess; 
+
+    var ambientProduct = mult(lightAmbient, materialAmbient);
+    var diffuseProduct = mult(lightDiffuse, materialDiffuse);
+    var specularProduct = mult(lightSpecular, materialSpecular);
+
+    gl.uniform4fv( gl.getUniformLocation(program,
+       "ambientProduct"),flatten(ambientProduct) );
+    gl.uniform4fv( gl.getUniformLocation(program,
+       "diffuseProduct"),flatten(diffuseProduct) );
+    gl.uniform4fv( gl.getUniformLocation(program,
+       "specularProduct"),flatten(specularProduct) );
+    gl.uniform4fv( gl.getUniformLocation(program,
+       "lightPosition"),flatten(lightPosition) );
+    gl.uniform1f( gl.getUniformLocation(program,
+       "shininess"),materialShininess );
 
     var pBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
@@ -484,7 +486,7 @@ function draw(cube, color) {
 
     var cBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(fragColors), gl.STATIC_DRAW);
+    // gl.bufferData(gl.ARRAY_BUFFER, flatten(fragColors), gl.STATIC_DRAW);
 
     // var vColor = gl.getAttribLocation(program, "vColor");
     // gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
