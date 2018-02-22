@@ -38,9 +38,10 @@
 		vec4 diffuse = vec4(0,0,0,0); 
 
 		// vec3 lightDir = normalize(vec3(1,-.5, -2.0)); 
-		vec3 lightDir = normalize(vec3(.2, -.3, -1)); 
+		vec3 lightDir = normalize(vec3(.15, -.1, -1)); 
+//		vec3 lightDir = normalize(vec3(0, .3, -1)); 
 
-		if(dot(L, -lightDir) > 0.98) 
+		if(dot(L, -lightDir) > 0.97) 
 		{
 			diffuse = Kd * diffuseProduct; 
 			specular = Ks * specularProduct; 

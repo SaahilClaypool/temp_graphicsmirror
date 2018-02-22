@@ -35,16 +35,37 @@ var transforms = [];
 
 // light
 // var lightPosition = vec4(1.0, 1.0, 1.0, 1.0 );
-// var lightPosition = vec4(-10.0, 10.0, 10.0, 1.0 );
-var lightPosition = vec4(-5, 5.0, 0.0, 1.0 );
+var lightPosition = vec4(-15.0, 25.0, -10, 1.0 );
+// var lightPosition = vec4(-5, 5.0, 0.0, 1.0 );
+var lightPosition = vec4(0,0,0);
 var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
-var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
-var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
+var lightDiffuse = vec4( .50, 0.0, .50, .50 );
+var lightSpecular = vec4( 0.0, 1.0, 1.0, .50 );
 
-var materialAmbient = vec4( 1.0, 0.0, 1.0, 1.0 );
-var materialDiffuse = vec4( 1.0, 0.8, 0.0, 1.0 );
-var materialSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
-var materialShininess = 20;
+var materials = {
+    "brass": {
+        materialAmbient: vec4(0.329412, 0.223529, 0.027451, 1),
+        materialDiffuse: vec4(0.780392, 0.568627, 0.113725, 1.0),
+        materialSpecular: vec4(0.992157, 0.941176, 0.807843, 1),
+        materialShininess: 27.8974,
+    }, 
+    "silver": {
+        materialAmbient: vec4(0.23125,0.23125,0.23125,1),
+        materialDiffuse: vec4(0.2775,0.2775,0.2775,1),
+        materialSpecular: vec4(0.773911, 0.773911, 0.773911, 1),
+        materialShininess: 89.6, 
+    },
+    "plastic": {
+        materialAmbient: vec4(0,0,0,1),
+        materialDiffuse: vec4(.1,.1,.1),
+        materialSpecular: vec4(.5,.5,.5),
+        materialShininess: 32,
+    }
+}
+var materialAmbient = vec4(0.329412,0.223529, 0.027451, 1);
+var materialDiffuse = vec4(0.780392, 0.568627, 0.113725, 1.0 );
+var materialSpecular = vec4(0.992157, 0.941176, 0.807843,1);
+var materialShininess = 27.8974;
 
 function main() {
     // Retrieve <canvas> element
