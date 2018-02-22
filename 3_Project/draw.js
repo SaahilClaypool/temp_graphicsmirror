@@ -318,15 +318,15 @@ function render() {
     animate(1);
 }
 
-var animationNumber = 1000;
+var animationNumber = -1;
 
 async function animate(x) {
-    if (x > animationNumber) {
+    if (animationNumber > 0 && x > animationNumber) {
         return;
     }
     else {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        drawShapes(x); 
+        requestAnimationFrame(() => {drawShapes(x)});
         await sleep(50)
         animate(x + 1);
     }
