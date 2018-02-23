@@ -53,7 +53,7 @@ var transforms = [];
 
 // light
 var lightPosition = vec4(0, -.8, -7);
-var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0);
+var lightAmbient = vec4(0.2, 0.2, 0.8, 1.0);
 var lightDiffuse = vec4(1.0, 0.0, 0.0, 1.0);
 var lightSpecular = vec4(1.0, 1.0, 1.0, 1.0);
 
@@ -96,13 +96,13 @@ function main() {
         switch(event.key) {
             case "p":
             // increase cone
-            cutoff -= .003; 
+            cutoff -= .001; 
             if (cutoff > 1){
                 cutoff = 1; 
             }
             break; 
             case "i":
-            cutoff += .003; 
+            cutoff += .001; 
             if (cutoff < 0){
                 cutoff = 0; 
             }
@@ -317,7 +317,7 @@ function setup() {
     transforms.push({
         color: vec4(1, 0, 1, 1), 
         shape: 'sphere',
-        material: "custom",
+        material: "silver",
         parentIndex: 1, // parent is second level 
         offset: 0,
         rot: (index, mv) => {
