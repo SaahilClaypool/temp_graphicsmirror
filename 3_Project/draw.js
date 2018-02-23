@@ -116,7 +116,13 @@ function cube() {
     verts = verts.concat(quad(6, 5, 1, 2));
     verts = verts.concat(quad(4, 5, 6, 7));
     verts = verts.concat(quad(5, 4, 0, 1));
-    return verts;
+
+    var normals = []; 
+    verts.forEach((el) => {
+        normals.push(el[0], el[1], el[2], 0);
+    })
+
+    return {points: verts, normals: normals} ;
 }
 
 function sphere() {
@@ -174,7 +180,7 @@ function sphere() {
     var vd = vec4(0.816497, -0.471405, 0.333333, 1);
 
     tetrahedron(va, vb, vc, vd, 5);
-    return pointsArray
+    return {points: pointsArray, normals: normalsArray};
 }
 
 
@@ -462,7 +468,10 @@ function drawShapes() {
     });
 }
 
-function draw(cube, materialType) {
+function draw(shape, materialType) {
+
+    var cube = shape.points; 
+    var normalsArray = shape.normals; 
 
     var materialAmbient = materials[materialType].materialAmbient; 
     var materialDiffuse = materials[materialType].materialDiffuse; 
@@ -483,6 +492,14 @@ function draw(cube, materialType) {
        "lightPosition"),flatten(lightPosition) );
     gl.uniform1f( gl.getUniformLocation(program,
        "shininess"),materialShininess );
+
+    var nBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
+
+    var vNormal = gl.getAttribLocation( program, "vNormal" );
+    gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( vNormal);
 
     var pBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
