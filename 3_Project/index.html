@@ -9,6 +9,7 @@
 	uniform mat4 projectionMatrix;
 	uniform mat4 modelMatrix;
 	attribute vec4 vColor;
+	uniform float cutoff; 
 	varying vec4 fColor;
 
 		// lighting
@@ -42,7 +43,7 @@
 		vec3 lightDir = normalize(vec3(0, .1, -1)); 
 //		vec3 lightDir = normalize(vec3(0, .3, -1)); 
 
-		if(dot(L, -lightDir) > 0.99) 
+		if(dot(L, -lightDir) > cutoff) 
 		{
 			diffuse = Kd * diffuseProduct; 
 			specular = Ks * specularProduct; 

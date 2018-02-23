@@ -1,3 +1,19 @@
+/**
+ * 
+ * This file contains all of the logic to draw a mobile. 
+ * 
+ * Shapes are either cubes or spheres, and have * varying materials 
+ * (plastic bronze and silver). This file will draw a mobile 
+ * of the defined shapes on a canvas, and defines a spotlight pointing at the 
+ * center of the canvas. Starter code is adapted from class examples. 
+ * 
+ * 
+ * @author saahil claypool
+ * 
+ */
+
+
+//////////// GLOBALS
 var points;
 var colors;
 
@@ -14,6 +30,8 @@ var modelView, projection;
 var eye;
 const at = vec3(0.0, 0.0, -15);
 const up = vec3(0.0, 1.0, 0.0);
+var flat = false; 
+var cutoff = .99; 
 
 
 var stack = [];
@@ -34,16 +52,14 @@ var transforms = [];
  */
 
 // light
-// var lightPosition = vec4(1.0, 1.0, 1.0, 1.0 );
-// var lightPosition = vec4(-5, 5.0, 0.0, 1.0 );
 var lightPosition = vec4(0, -.8, -7);
 var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0);
 var lightDiffuse = vec4(1.0, 0.0, 0.0, 1.0);
 var lightSpecular = vec4(1.0, 1.0, 1.0, 1.0);
-// var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
-// var lightDiffuse = vec4(1, 1, 1, 1);
-// var lightSpecular = vec4(1, 1, 1, 1);
 
+/**
+ * Defines materials to be used for shapes
+ */
 var materials = {
     "brass": {
         materialAmbient: vec4(0.329412, 0.223529, 0.027451, 1),
@@ -71,7 +87,35 @@ var materials = {
     }
 }
 
+/**
+ * Setup and star the animation
+ */
 function main() {
+
+    document.onkeypress = ((ev) => {
+        switch(event.key) {
+            case "p":
+            // increase cone
+            cutoff -= .003; 
+            if (cutoff > 1){
+                cutoff = 1; 
+            }
+            break; 
+            case "i":
+            cutoff += .003; 
+            if (cutoff < 0){
+                cutoff = 0; 
+            }
+            // decrease cone
+            break; 
+            case "m":
+            flat = false; 
+            break; 
+            case "n":
+            flat = true; 
+            break; 
+        }
+    });
     // Retrieve <canvas> element
     var canvas = document.getElementById('webgl');
 
@@ -105,9 +149,14 @@ function main() {
     modelView = gl.getUniformLocation(program, "modelMatrix");
 
 
-    render();
+    setup();
 }
 
+/**
+ * Create a cube. 
+ * 
+ * Adapted from sample code. 
+ */
 function cube() {
     var verts = [];
     verts = verts.concat(quad(1, 0, 3, 2));
@@ -118,16 +167,34 @@ function cube() {
     verts = verts.concat(quad(5, 4, 0, 1));
 
     var normals = [];
+    var flatArray = [];
+
+    for (var i = 0; i < verts.length; i+=3){
+        let diffB = subtract(verts[i + 1] , verts[i]);
+        let diffC = subtract(verts[i + 2], verts[i]);
+
+        // let faceNorm = normalize(cross(diffC, diffB)); 
+        let faceNorm = verts[i]; 
+
+
+        flatArray.push(faceNorm[0], faceNorm[1], faceNorm[2], 0.0);
+        flatArray.push(faceNorm[0], faceNorm[1], faceNorm[2], 0.0);
+        flatArray.push(faceNorm[0], faceNorm[1], faceNorm[2], 0.0);
+    }
     verts.forEach((el) => {
         normals.push(el[0], el[1], el[2], 0);
-    })
+    }); // take every 3
 
-    return { points: verts, normals: normals };
+    return { points: verts, normals: normals, flatArray: flatArray};
 }
 
+/**
+ * Create a sphere. Adapted from sample code. 
+ */
 function sphere() {
     let pointsArray = [];
     let normalsArray = [];
+    let flatArray = [];
     let index = 0;
     let triangle = (a, b, c) => {
         pointsArray.push(a);
@@ -139,6 +206,15 @@ function sphere() {
         normalsArray.push(a[0], a[1], a[2], 0.0);
         normalsArray.push(b[0], b[1], b[2], 0.0);
         normalsArray.push(c[0], c[1], c[2], 0.0);
+
+        let diffB = subtract(b,a); 
+        let diffC = subtract(c,a); 
+
+        let faceNorm = normalize(cross(diffC, diffB)); 
+        // let faceNorm = a; 
+        flatArray.push(faceNorm[0], faceNorm[1], faceNorm[2], 0.0);
+        flatArray.push(faceNorm[0], faceNorm[1], faceNorm[2], 0.0);
+        flatArray.push(faceNorm[0], faceNorm[1], faceNorm[2], 0.0);
 
         index += 3;
 
@@ -180,20 +256,26 @@ function sphere() {
     var vd = vec4(0.816497, -0.471405, 0.333333, 1);
 
     tetrahedron(va, vb, vc, vd, 5);
-    return { points: pointsArray, normals: normalsArray };
+    return { points: pointsArray, normals: normalsArray, flatArray: flatArray};
 }
 
 
-function render() {
+/**
+ * Setup the drawing. 
+ * 
+ * Places all objects with their transformations into a list. 
+ * This list defines how the objects will move and be colored etc.
+ */
+function setup() {
     pMatrix = perspective(fovy, aspect, .1, 45);
     gl.uniformMatrix4fv(projection, false, flatten(pMatrix));
 
     eye = vec3(0, 0, 0);
     mvMatrix = lookAt(eye, at, up);
 
-    //--------------------------------------------------------  Shape 0 Green root
+    //--------------------------------------------------------  Shape 0 
     transforms.push({
-        color: vec4(0, 1, 0, 1),// green
+        color: vec4(0, 1, 0, 1),
         material: "brass",
         shape: 'sphere',
         parentIndex: -1, // no parent
@@ -213,12 +295,12 @@ function render() {
         }
     });
 
-    //--------------------------------------------------------  Shape 1 blue second level 
+    //--------------------------------------------------------  Shape 1 
     transforms.push({
-        color: vec4(0, 0, 1, 1), // blue
+        color: vec4(0, 0, 1, 1), 
         material: "silver",
         shape: 'sphere',
-        parentIndex: 0, // no parent
+        parentIndex: 0, // parent is the root
         rot: (index, mv) => {
             return mv;
         },
@@ -231,15 +313,15 @@ function render() {
         }
     });
 
-    //--------------------------------------------------------  Shape 2 purple circle third level
+    //--------------------------------------------------------  
     transforms.push({
-        color: vec4(1, 0, 1, 1), // purple circle
+        color: vec4(1, 0, 1, 1), 
         shape: 'sphere',
         material: "custom",
-        parentIndex: 1, // no parent
+        parentIndex: 1, // parent is second level 
         offset: 0,
         rot: (index, mv) => {
-            transforms[index].offset += 10;
+            transforms[index].offset += 4;
             return mult(
                 mv,
                 rotateY(-1 * (45 + transforms[index].offset)),
@@ -255,15 +337,15 @@ function render() {
         }
     });
 
-    //--------------------------------------------------------  Shape 3 red square thirdlevel
+    //--------------------------------------------------------  Shape 3 
     transforms.push({
-        color: vec4(1, 0, 0, 1), // red
+        color: vec4(1, 0, 0, 1), 
         material: "brass",
         shape: 'cube',
         parentIndex: 1,
         offset: 0,
         rot: (index, mv) => {
-            transforms[index].offset += 15;
+            transforms[index].offset += -1;
             return mult(
                 mv,
                 rotateY(1 * (45 + transforms[index].offset)),
@@ -278,7 +360,7 @@ function render() {
         }
     });
 
-    //--------------------------------------------------------  Shape 4 red 
+    //--------------------------------------------------------  
     transforms.push({
         color: vec4(1, 0, 0, 1), // red
         material: "silver",
@@ -299,32 +381,23 @@ function render() {
             return mult(
                 mv,
                 translate(-2, -3, 0),
-                // rotateY(0),
-                // rotateY(0),
             );
         }
     });
 
     transforms.push({
-        color: vec4(1, 0, .5, 1), // pink
+        color: vec4(1, 0, .5, 1), 
         material: "brass",
         shape: 'cube',
-        parentIndex: 4, // Thing below circle
+        parentIndex: 4, 
         offset: 0,
         rot: (index, mv) => {
-            // transforms[index].offset += 1; 
             return mv;
-            // return mult (
-            //     mv,
-            // 	// rotateY((45 + transforms[index].offset)),
-            // 	rotateY(0),
-            // );
         },
         trans: (index, mv) => {
             return mult(
                 mv,
                 translate(-2, -3, 0),
-                // rotateY(0),
             );
         }
     });
@@ -332,8 +405,14 @@ function render() {
     animate(1);
 }
 
+// variable to toggle animation
 var animationNumber = -1;
 
+/**
+ * Loop and call the animation function. 
+ * 
+ * Draws each shape each iteration
+ */
 async function animate(x) {
     if (animationNumber > 0 && x > animationNumber) {
         return;
@@ -346,6 +425,13 @@ async function animate(x) {
     }
 }
 
+/**
+ * Draw a single connection between two shapes. 
+ * 
+ * @param parentTrans translation of the parent
+ * @param currentTrans translation of current shape
+ * @param center fudge factor offset for shapes if they aren't centered
+ */
 function drawConnection(parentTrans, currentTrans, center) {
     // let start = mult(parentTrans, vec4(center, center, center, 1)),
     //     end = mult(currentTrans, vec4(center, center, center, 1));
@@ -377,25 +463,16 @@ function drawConnection(parentTrans, currentTrans, center) {
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(fragColors), gl.STATIC_DRAW);
 
-    // var vColor = gl.getAttribLocation(program, "vColor");
-    // gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-    // gl.enableVertexAttribArray(vColor);
-
     gl.drawArrays(gl.LINES, 0, cube.length);
 
-    // start = mult(parentTrans, vec4(center, center, center, 1)),
-    //     end = mult(currentTrans, vec4(center, center, center, 1));
     start = mult(parentTrans, vec4(0, 0, 0, 1)),
         end = mult(currentTrans, vec4(0, 0, 0, 1));
 
-    // start[1] += center
     start[1] = hself[1];
-    // end[0] = start[0]
     start[0] = hself[0]
     start[2] = hself[2]
     end[0] = hself[0]
     end[2] = hself[2]
-
 
     cube = [end, start]
     color = vec4(0, 0, 0, 1)
@@ -416,16 +493,14 @@ function drawConnection(parentTrans, currentTrans, center) {
 
     var cBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-    // gl.bufferData(gl.ARRAY_BUFFER, flatten(fragColors), gl.STATIC_DRAW);
-
-    // var vColor = gl.getAttribLocation(program, "vColor");
-    // gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-    // gl.enableVertexAttribArray(vColor);
 
     gl.drawArrays(gl.LINES, 0, cube.length);
 
 }
 
+/**
+ * Draw all shapes
+ */
 function drawShapes() {
     stack = []
     transStack = []
@@ -465,10 +540,19 @@ function drawShapes() {
     });
 }
 
+/**
+ * Draw single shape, given material type
+ * @param shape points and normals array to be drawn
+ * @param materialType material to be added as color
+ */
 function draw(shape, materialType) {
 
     var cube = shape.points;
     var normalsArray = shape.normals;
+
+    if(flat) {
+        normalsArray = shape.flatArray; 
+    }
 
     var materialAmbient = materials[materialType].materialAmbient;
     var materialDiffuse = materials[materialType].materialDiffuse;
@@ -489,6 +573,8 @@ function draw(shape, materialType) {
         "lightPosition"), flatten(lightPosition));
     gl.uniform1f(gl.getUniformLocation(program,
         "shininess"), materialShininess);
+    gl.uniform1f(gl.getUniformLocation(program,
+        "cutoff"), cutoff);
 
     var nBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer);
@@ -508,17 +594,15 @@ function draw(shape, materialType) {
 
     var cBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-    // gl.bufferData(gl.ARRAY_BUFFER, flatten(fragColors), gl.STATIC_DRAW);
-
-    // var vColor = gl.getAttribLocation(program, "vColor");
-    // gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-    // gl.enableVertexAttribArray(vColor);
 
     gl.drawArrays(gl.TRIANGLES, 0, cube.length);
 
 }
 
 
+/**
+ * Create a quadralateral from the given indeces 
+ */
 function quad(a, b, c, d) {
     var verts = [];
 
