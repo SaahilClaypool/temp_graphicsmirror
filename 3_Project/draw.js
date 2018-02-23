@@ -36,10 +36,10 @@ var transforms = [];
 // light
 // var lightPosition = vec4(1.0, 1.0, 1.0, 1.0 );
 // var lightPosition = vec4(-5, 5.0, 0.0, 1.0 );
-var lightPosition = vec4(0,-.8,-7);
-var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
-var lightDiffuse = vec4( 1.0, 0.0, 0.0, 1.0 );
-var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
+var lightPosition = vec4(0, -.8, -7);
+var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0);
+var lightDiffuse = vec4(1.0, 0.0, 0.0, 1.0);
+var lightSpecular = vec4(1.0, 1.0, 1.0, 1.0);
 // var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
 // var lightDiffuse = vec4(1, 1, 1, 1);
 // var lightSpecular = vec4(1, 1, 1, 1);
@@ -50,7 +50,7 @@ var materials = {
         materialDiffuse: vec4(0.780392, 0.568627, 0.113725, 1.0),
         materialSpecular: vec4(0.992157, 0.941176, 0.807843, 1),
         materialShininess: 84,
-    }, 
+    },
     "custom": {
         materialAmbient: vec4(1.0, 0.0, 1.0, 1.0),
         materialDiffuse: vec4(0.0, 0.8, 0.0, 0.5),
@@ -58,15 +58,15 @@ var materials = {
         materialShininess: 100,
     },
     "silver": {
-        materialAmbient: vec4(0.23125,0.23125,0.23125,1),
-        materialDiffuse: vec4(0.2775,0.2775,0.2775,1),
+        materialAmbient: vec4(0.23125, 0.23125, 0.23125, 1),
+        materialDiffuse: vec4(0.2775, 0.2775, 0.2775, 1),
         materialSpecular: vec4(0.773911, 0.773911, 0.773911, 1),
-        materialShininess: 1, 
+        materialShininess: 1,
     },
     "plastic": {
-        materialAmbient: vec4(0,0,0,1),
-        materialDiffuse: vec4(.1,.1,.1),
-        materialSpecular: vec4(.5,.5,.5),
+        materialAmbient: vec4(0, 0, 0, 1),
+        materialDiffuse: vec4(.1, .1, .1),
+        materialSpecular: vec4(.5, .5, .5),
         materialShininess: 1,
     }
 }
@@ -117,18 +117,18 @@ function cube() {
     verts = verts.concat(quad(4, 5, 6, 7));
     verts = verts.concat(quad(5, 4, 0, 1));
 
-    var normals = []; 
+    var normals = [];
     verts.forEach((el) => {
         normals.push(el[0], el[1], el[2], 0);
     })
 
-    return {points: verts, normals: normals} ;
+    return { points: verts, normals: normals };
 }
 
 function sphere() {
     let pointsArray = [];
     let normalsArray = [];
-    let index = 0; 
+    let index = 0;
     let triangle = (a, b, c) => {
         pointsArray.push(a);
         pointsArray.push(b);
@@ -180,7 +180,7 @@ function sphere() {
     var vd = vec4(0.816497, -0.471405, 0.333333, 1);
 
     tetrahedron(va, vb, vc, vd, 5);
-    return {points: pointsArray, normals: normalsArray};
+    return { points: pointsArray, normals: normalsArray };
 }
 
 
@@ -188,46 +188,46 @@ function render() {
     pMatrix = perspective(fovy, aspect, .1, 45);
     gl.uniformMatrix4fv(projection, false, flatten(pMatrix));
 
-    eye = vec3(0, 0,0);
+    eye = vec3(0, 0, 0);
     mvMatrix = lookAt(eye, at, up);
 
     //--------------------------------------------------------  Shape 0 Green root
     transforms.push({
         color: vec4(0, 1, 0, 1),// green
-        material: "brass", 
+        material: "brass",
         shape: 'sphere',
         parentIndex: -1, // no parent
-        offset : 0,
+        offset: 0,
         rot: (index, mv) => {
-            transforms[index].offset += 4; 
+            transforms[index].offset += 4;
             return mult(
-                mv, 
+                mv,
                 rotateY(45 + transforms[index].offset),
             )
         },
-        trans: (index, mv) => { 
-            return mult (
-                    mv,
-                    translate(0, 5, -20),
-            ); 
+        trans: (index, mv) => {
+            return mult(
+                mv,
+                translate(0, 5, -20),
+            );
         }
     });
 
     //--------------------------------------------------------  Shape 1 blue second level 
     transforms.push({
         color: vec4(0, 0, 1, 1), // blue
-        material: "silver", 
+        material: "silver",
         shape: 'sphere',
         parentIndex: 0, // no parent
         rot: (index, mv) => {
             return mv;
         },
-        trans: (index, mv) => { 
+        trans: (index, mv) => {
             // shift up
             return mult(
                 mv,
-                translate(-2,-2,0), 
-            ); 
+                translate(-2, -2, 0),
+            );
         }
     });
 
@@ -235,41 +235,41 @@ function render() {
     transforms.push({
         color: vec4(1, 0, 1, 1), // purple circle
         shape: 'sphere',
-        material: "custom", 
+        material: "custom",
         parentIndex: 1, // no parent
-        offset: 0, 
+        offset: 0,
         rot: (index, mv) => {
-            transforms[index].offset += 10; 
-            return mult (
+            transforms[index].offset += 10;
+            return mult(
                 mv,
                 rotateY(-1 * (45 + transforms[index].offset)),
             );
         },
-        trans: (index, mv) => { 
+        trans: (index, mv) => {
             // shift up
-            return mult (
-                    mv,
-                    translate(3,-3,0),
-                    // rotateY(0),
-                );
+            return mult(
+                mv,
+                translate(3, -3, 0),
+                // rotateY(0),
+            );
         }
     });
 
     //--------------------------------------------------------  Shape 3 red square thirdlevel
     transforms.push({
         color: vec4(1, 0, 0, 1), // red
-        material: "brass", 
+        material: "brass",
         shape: 'cube',
-        parentIndex: 1, 
-        offset: 0, 
+        parentIndex: 1,
+        offset: 0,
         rot: (index, mv) => {
-            transforms[index].offset += 15; 
-            return mult (
+            transforms[index].offset += 15;
+            return mult(
                 mv,
                 rotateY(1 * (45 + transforms[index].offset)),
             );
         },
-        trans: (index, mv) => { 
+        trans: (index, mv) => {
             // shift up
             return mult(
                 mv,
@@ -281,20 +281,20 @@ function render() {
     //--------------------------------------------------------  Shape 4 red 
     transforms.push({
         color: vec4(1, 0, 0, 1), // red
-        material: "silver", 
+        material: "silver",
         shape: 'cube',
         parentIndex: 2, // purple circle
-        offset: 0, 
+        offset: 0,
         rot: (index, mv) => {
-            transforms[index].offset += 5; 
+            transforms[index].offset += 5;
             // return mv; 
-            return mult (
+            return mult(
                 mv,
                 rotateY(-1 * (45 + transforms[index].offset)),
                 rotateY(0),
             );
         },
-        trans: (index, mv) => { 
+        trans: (index, mv) => {
             // shift up
             return mult(
                 mv,
@@ -307,20 +307,20 @@ function render() {
 
     transforms.push({
         color: vec4(1, 0, .5, 1), // pink
-        material: "brass", 
+        material: "brass",
         shape: 'cube',
         parentIndex: 4, // Thing below circle
-        offset: 0, 
+        offset: 0,
         rot: (index, mv) => {
             // transforms[index].offset += 1; 
-            return mv; 
+            return mv;
             // return mult (
             //     mv,
             // 	// rotateY((45 + transforms[index].offset)),
             // 	rotateY(0),
             // );
         },
-        trans: (index, mv) => { 
+        trans: (index, mv) => {
             return mult(
                 mv,
                 translate(-2, -3, 0),
@@ -340,27 +340,24 @@ async function animate(x) {
     }
     else {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        requestAnimationFrame(() => {drawShapes(x)});
+        requestAnimationFrame(() => { drawShapes(x) });
         await sleep(50)
         animate(x + 1);
     }
 }
 
-function drawConnection (parentTrans, currentTrans, center) { 
+function drawConnection(parentTrans, currentTrans, center) {
     // let start = mult(parentTrans, vec4(center, center, center, 1)),
     //     end = mult(currentTrans, vec4(center, center, center, 1));
     let hparent = mult(parentTrans, vec4(0, 0, 0, 1)),
         hself = mult(currentTrans, vec4(0, 0, 0, 1));
-    // hparent[1] += center
-    // start[1] = end[1]
-    // hparent[1] = hself[1]
     hself[1] = hparent[1]
 
 
     gl.uniformMatrix4fv(modelView, false, flatten(mvMatrix));
 
     let cube = [hself, hparent]
-    let color = vec4(0,0,0,1)
+    let color = vec4(0, 0, 0, 1)
 
     var fragColors = [];
 
@@ -400,8 +397,8 @@ function drawConnection (parentTrans, currentTrans, center) {
     end[2] = hself[2]
 
 
-    cube = [end,start]
-    color = vec4(0,0,0,1)
+    cube = [end, start]
+    color = vec4(0, 0, 0, 1)
 
     fragColors = [];
 
@@ -426,15 +423,15 @@ function drawConnection (parentTrans, currentTrans, center) {
     // gl.enableVertexAttribArray(vColor);
 
     gl.drawArrays(gl.LINES, 0, cube.length);
-    
- }
+
+}
 
 function drawShapes() {
     stack = []
     transStack = []
     let getMvMatrix = (index) => {
         if (index == -1) {
-            return mvMatrix; 
+            return mvMatrix;
         }
         let parentIndex = transforms[index].parentIndex;
         if (stack.length > index) {
@@ -445,22 +442,22 @@ function drawShapes() {
             let currentTrans = cur.trans(index, getMvMatrix(parentIndex));
             let currentRot = cur.rot(index, currentTrans);
             stack[index] = currentRot;
-            transStack[index] = currentTrans; 
+            transStack[index] = currentTrans;
             return [getMvMatrix(parentIndex), currentRot];
         }
     }
 
     transforms.forEach((trans, index) => {
         shape = shapes[trans.shape];
-        let transMats = getMvMatrix(index); 
+        let transMats = getMvMatrix(index);
         let mvMatrix = transMats[1],
             parentMat = transMats[0];
         gl.uniformMatrix4fv(modelView, false, flatten(mvMatrix));
         draw(shape, transforms[index].material);
-        
-        if(trans.parentIndex >= 0){
+
+        if (trans.parentIndex >= 0) {
             var center = .3;
-            if(trans.shape === 'cube'){
+            if (trans.shape === 'cube') {
                 center = .3;
             }
             drawConnection(parentMat, mvMatrix, center)
@@ -470,36 +467,36 @@ function drawShapes() {
 
 function draw(shape, materialType) {
 
-    var cube = shape.points; 
-    var normalsArray = shape.normals; 
+    var cube = shape.points;
+    var normalsArray = shape.normals;
 
-    var materialAmbient = materials[materialType].materialAmbient; 
-    var materialDiffuse = materials[materialType].materialDiffuse; 
-    var materialSpecular = materials[materialType].materialSpecular; 
-    var materialShininess = materials[materialType].materialShininess; 
+    var materialAmbient = materials[materialType].materialAmbient;
+    var materialDiffuse = materials[materialType].materialDiffuse;
+    var materialSpecular = materials[materialType].materialSpecular;
+    var materialShininess = materials[materialType].materialShininess;
 
     var ambientProduct = mult(lightAmbient, materialAmbient);
     var diffuseProduct = mult(lightDiffuse, materialDiffuse);
     var specularProduct = mult(lightSpecular, materialSpecular);
 
-    gl.uniform4fv( gl.getUniformLocation(program,
-       "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-       "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-       "specularProduct"),flatten(specularProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-       "lightPosition"),flatten(lightPosition) );
-    gl.uniform1f( gl.getUniformLocation(program,
-       "shininess"),materialShininess );
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "ambientProduct"), flatten(ambientProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "diffuseProduct"), flatten(diffuseProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "specularProduct"), flatten(specularProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "lightPosition"), flatten(lightPosition));
+    gl.uniform1f(gl.getUniformLocation(program,
+        "shininess"), materialShininess);
 
     var nBuffer = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
+    gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW);
 
-    var vNormal = gl.getAttribLocation( program, "vNormal" );
-    gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vNormal);
+    var vNormal = gl.getAttribLocation(program, "vNormal");
+    gl.vertexAttribPointer(vNormal, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vNormal);
 
     var pBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pBuffer);
