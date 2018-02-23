@@ -31,7 +31,7 @@ var eye;
 const at = vec3(0.0, 0.0, -15);
 const up = vec3(0.0, 1.0, 0.0);
 var flat = false; 
-var cutoff = .99; 
+var cutoff = .97; 
 
 
 var stack = [];
@@ -54,7 +54,7 @@ var transforms = [];
 // light
 var lightPosition = vec4(0, -.8, -7);
 var lightAmbient = vec4(0.2, 0.2, 0.8, 1.0);
-var lightDiffuse = vec4(1.0, 0.0, 0.0, 1.0);
+var lightDiffuse = vec4(.5, 0.3, 0.5, 1.0);
 var lightSpecular = vec4(1.0, 1.0, 1.0, 1.0);
 
 /**
@@ -68,10 +68,22 @@ var materials = {
         materialShininess: 84,
     },
     "custom": {
-        materialAmbient: vec4(1.0, 0.0, 1.0, 1.0),
-        materialDiffuse: vec4(0.0, 0.8, 0.0, 0.5),
+        materialAmbient: vec4(.3,.3,.3),
+        materialDiffuse: vec4(0.8, 0.0, 0.0, 0.5),
         materialSpecular: vec4(1.0, 1, 1, 1.0),
         materialShininess: 100,
+    },
+    "custom2": {
+        materialAmbient: vec4(.3,.3,.3),
+        materialDiffuse: vec4(0.0, 0.0, 0.8, 0.5),
+        materialSpecular: vec4(1.0, 1, 1, 1.0),
+        materialShininess: 50,
+    },
+    "custom3": {
+        materialAmbient: vec4(.3,.3,.3),
+        materialDiffuse: vec4(0.0, 0.8, 0.0, 0.5),
+        materialSpecular: vec4(1.0, 1, 1, 1.0),
+        materialShininess: 50,
     },
     "silver": {
         materialAmbient: vec4(0.23125, 0.23125, 0.23125, 1),
@@ -281,7 +293,7 @@ function setup() {
         parentIndex: -1, // no parent
         offset: 0,
         rot: (index, mv) => {
-            transforms[index].offset += 4;
+            transforms[index].offset += 2;
             return mult(
                 mv,
                 rotateY(45 + transforms[index].offset),
@@ -301,8 +313,13 @@ function setup() {
         material: "silver",
         shape: 'sphere',
         parentIndex: 0, // parent is the root
+        offset : 0, 
         rot: (index, mv) => {
-            return mv;
+            transforms[index].offset -= 4;
+            return mult(
+                mv,
+                rotateY(45 + transforms[index].offset),
+            )
         },
         trans: (index, mv) => {
             // shift up
@@ -317,11 +334,11 @@ function setup() {
     transforms.push({
         color: vec4(1, 0, 1, 1), 
         shape: 'sphere',
-        material: "silver",
+        material: "custom",
         parentIndex: 1, // parent is second level 
         offset: 0,
         rot: (index, mv) => {
-            transforms[index].offset += 4;
+            transforms[index].offset -= 6;
             return mult(
                 mv,
                 rotateY(-1 * (45 + transforms[index].offset)),
@@ -340,12 +357,12 @@ function setup() {
     //--------------------------------------------------------  Shape 3 
     transforms.push({
         color: vec4(1, 0, 0, 1), 
-        material: "brass",
+        material: "custom2",
         shape: 'cube',
         parentIndex: 1,
         offset: 0,
         rot: (index, mv) => {
-            transforms[index].offset += -1;
+            transforms[index].offset += 8;
             return mult(
                 mv,
                 rotateY(1 * (45 + transforms[index].offset)),
@@ -355,7 +372,7 @@ function setup() {
             // shift up
             return mult(
                 mv,
-                translate(-1, -3, 0),
+                translate(-3, -3, 0),
             );
         }
     });
@@ -363,12 +380,12 @@ function setup() {
     //--------------------------------------------------------  
     transforms.push({
         color: vec4(1, 0, 0, 1), // red
-        material: "silver",
+        material: "custom3",
         shape: 'cube',
         parentIndex: 2, // purple circle
         offset: 0,
         rot: (index, mv) => {
-            transforms[index].offset += 5;
+            transforms[index].offset -= 6;
             // return mv; 
             return mult(
                 mv,
@@ -380,19 +397,24 @@ function setup() {
             // shift up
             return mult(
                 mv,
-                translate(-2, -3, 0),
+                translate(2, -3, 0),
             );
         }
     });
 
     transforms.push({
         color: vec4(1, 0, .5, 1), 
-        material: "brass",
+        material: "plastic",
         shape: 'cube',
-        parentIndex: 4, 
+        parentIndex: 3, 
         offset: 0,
         rot: (index, mv) => {
-            return mv;
+            transforms[index].offset -= 6;
+            return mult(
+                mv,
+                rotateY(-1 * (45 + transforms[index].offset)),
+                rotateY(0),
+            );
         },
         trans: (index, mv) => {
             return mult(
