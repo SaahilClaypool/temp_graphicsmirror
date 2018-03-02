@@ -123,11 +123,16 @@ var render = function() {
         modelViewMatrix = mult(modelViewMatrix, m);
         modelViewMatrix = mult(modelViewMatrix, translate(-light[0], -light[1], -light[2]));
 
+        // So, just make a new model view matrix by translating light to center, then multiplying by (m) matrix
+        // then translate back from light
+
         // send color and matrix for shadow
 
         gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
         gl.uniform4fv(fColor, flatten(black));
         gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+
+        // draw with the same color
 
         //requestAnimFrame(render);
     }
